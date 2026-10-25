@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>משחק אוצר מילים - כיתה ה׳</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f0edff;color:#282448;text-align:center;margin:0;padding:20px}
+main{max-width:600px;margin:auto}
+h1{color:#6558d3;font-size:30px}
+.card{background:white;border-radius:22px;padding:24px;margin:18px 0;box-shadow:0 5px 20px #0001}
+button{font-size:18px;border:0;border-radius:13px;padding:14px;margin:6px;cursor:pointer}
+.mode{background:#e7e2ff;color:#4537a0}
+.answer{display:block;width:100%;background:#f1efff;color:#282448;margin:10px 0}
+.answer:active{background:#d7d0ff}
+#word{font-size:38px;font-weight:bold;margin:25px 0}
+#message{font-size:20px;font-weight:bold;min-height:28px}
+#next,#restart{background:#6558d3;color:white;width:100%}
+#next{display:none}
+.small{color:#777;font-size:14px}
+</style>
+</head>
+<body>
+<main>
+<h1>🎮 אתגר אוצר המילים</h1>
+<p>מתאמנים למבחן באנגלית — כיתה ה׳</p>
+<div class="card">
+<button class="mode" onclick="setMode('en')">🇬🇧 אנגלית לעברית</button>
+<button class="mode" onclick="setMode('he')">🇮🇱 עברית לאנגלית</button>
+<button class="mode" onclick="setMode('mix')">🎲 מעורב</button>
+</div>
+<div class="card">
+<p>⭐ ניקוד: <b id="score">0</b></p>
+<p class="small" id="progress">שאלה 1</p>
+<div id="word">guitar</div>
+<div id="answers"></div>
+<p id="message"></p>
+<button id="next" onclick="nextQuestion()">לשאלה הבאה ←</button>
+<div id="finish" style="display:none">
+<h2>🏆 סיימתם!</h2>
+<p id="final"></p>
+<button id="restart" onclick="start()">משחקים שוב!</button>
+</div>
+</div>
+<div class="card">
+<h3>📚 המילים לתרגול</h3>
+<p id="list" class="small"></p>
+</div>
+</main>
+<script>
+const words=[
+["student","תלמיד / תלמידה"],
+["guitar","גיטרה"],
+["piano","פסנתר"],
+["bathroom","שירותים / חדר אמבטיה"],
+["goal","מטרה / שער"],
+["flowers","פרחים"],
+["study","ללמוד"],
+["date","תאריך"],
+["building","בניין"],
+["toilet","שירותים"],
+["do","לעשות"],
+["market","שוק"],
+["candy","ממתק"],
+["Israel","ישראל"],
+["classroom","כיתה"],
+["dining room","חדר אוכל"],
+["throw","לזרוק"],
+["sofa","ספה"],
+["village","כפר"],
+["card","כרטיס"],
+["presents","מתנות"],
+["kick","לבעוט"],
+["sell","למכור"],
+["far","רחוק"],
+["same","אותו / אותה"],
+["pretty","יפה"],
+["end","סוף"],
+["hobby","תחביב"],
+["I'm sorry","אני מצטער / מצטערת"],
+["also","גם"],
+["other","אחר / אחרת"],
+["soon","בקרוב"],
+["month","חודש"],
+["year","שנה"],
+["hear","לשמוע"],
+["teach","ללמד"],
+["teacher","מורה"],
+["sweet","מתוק / מתוקה"],
+["doctor","רופא / רופאה"],
+["beach","חוף"],
+["happy","שמח / שמחה"],
+["friend","חבר / חברה"],
+["favorite","אהוב / מועדף"],
+["subject","מקצוע לימוד"],
+["trip","טיול"],
+["outside","בחוץ"],
+["school","בית ספר"],
+["art","אמנות"],
+["food","אוכל"],
+["sport","ספורט"],
+["lesson","שיעור"]
+];
+let mode="en",deck=[],index=0,score=0,locked=false;
+function shuffle(a){return a.slice().sort(()=>Math.random()-.5)}
+function setMode(m){mode=m;start()}
+function start(){
+deck=shuffle(words).slice(0,10);index=0;score=0;locked=false;
+document.getElementById("score").textContent=score;
+document.getElementById("finish").style.display="none";
+document.getElementById("next").style.display="none";
+document.getElementById("word").style.display="block";
+document.getElementById("answers").style.display="block";
+document.getElementById("message").style.display="block";
+showQuestion()
+}
+function showQuestion(){
+locked=false;
+let w=deck[index];
+let reverse=mode==="he"||(mode==="mix"&&Math.random()<.5);
+let question=reverse?w[1]:w[0];
+let correct=reverse?w[0]:w[1];
+document.getElementById("word").textContent=question;
+document.getElementById("progress").textContent="שאלה "+(index+1)+" מתוך "+deck.length;
+document.getElementById("message").textContent="";
+document.getElementById("next").style.display="none";
+let wrong=shuffle(words.filter(x=>x!==w)).slice(0,3).map(x=>reverse?x[0]:x[1]);
+let choices=shuffle([correct,...wrong]);
+let box=document.getElementById("answers");box.innerHTML="";
+choices.forEach(answer=>{
+let b=document.createElement("button");
+b.className="answer";b.textContent=answer;
+b.onclick=()=>choose(b,answer,correct);
+box.appendChild(b)
+})
+}
+function choose(button,answer,correct){
+if(locked)return;locked=true;
+document.querySelectorAll(".answer").forEach(b=>b.disabled=true);
+if(answer===correct){
+score+=10;button.style.background="#bdf2d5";
+document.getElementById("message").textContent="כל הכבוד! תשובה נכונה 🌟";
+document.getElementById("message").style.color="green"
+}else{
+button.style.background="#ffd9df";
+document.querySelectorAll(".answer").forEach(b=>{if(b.textContent===correct)b.style.background="#bdf2d5"});
+document.getElementById("message").textContent="לא נורא! התשובה הנכונה: "+correct;
+document.getElementById("message").style.color="#b52e48"
+}
+document.getElementById("score").textContent=score;
+document.getElementById("next").style.display="block";
+document.getElementById("next").textContent=index===deck.length-1?"לתוצאות 🏆":"לשאלה הבאה ←"
+}
+function nextQuestion(){
+if(!locked)return;
+index++;
+if(index<deck.length){showQuestion()}
+else{
+document.getElementById("word").style.display="none";
+document.getElementById("answers").style.display="none";
+document.getElementById("message").style.display="none";
+document.getElementById("next").style.display="none";
+document.getElementById("finish").style.display="block";
+document.getElementById("final").textContent="צברתם "+score+" נקודות מתוך 100!";
+document.getElementById("progress").textContent="סיימתם 10 שאלות!"
+}
+}
+document.getElementById("list").textContent=words.map(w=>w[0]+" = "+w[1]).join(" • ");
+start();
+</script>
+</body>
+</html>
