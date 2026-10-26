@@ -78,12 +78,16 @@ button:disabled{opacity:.5;cursor:default}
 .shake{animation:shake .35s}
 @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 #missedList{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;direction:ltr;margin:10px 0}
+#newList{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;direction:ltr;margin:10px 0}
+#newList span{background:#d9f8e8;color:#0b6b43;border-radius:12px;padding:6px 12px;font-weight:bold}
+#soundBtn{position:fixed;top:10px;left:10px;z-index:60;width:46px;height:46px;border-radius:50%;padding:0;font-size:22px;background:#fff;box-shadow:0 4px 14px #382b6630}
 #missedList span{background:#ffe4e9;color:#a33754;border-radius:12px;padding:6px 12px;font-weight:bold}
 footer{text-align:center;color:#6c6392;font-size:13px;padding:12px}
 @media(max-width:520px){body{padding:8px}.panel,header{padding:14px;border-radius:22px}#teacher{width:84px;height:110px}.speech{font-size:16px;padding:10px 12px}}
 </style>
 </head>
 <body>
+<button id="soundBtn" aria-label="צליל">🔊</button>
 <main>
 <header>
   <h1><span class="en">English Game ⭐</span><span class="he">משחק אנגלית</span></h1>
@@ -109,17 +113,19 @@ footer{text-align:center;color:#6c6392;font-size:13px;padding:12px}
 
 <section class="panel" id="startPanel" style="text-align:center">
   <h2><span class="en">Ready to play?</span><span class="he">מוכנים לשחק?</span></h2>
-  <label for="nickname"><span class="en">Nickname</span><span class="he">כינוי</span></label>
-  <input id="nickname" maxlength="24" placeholder="הקלידו כינוי" style="padding:12px;border:3px solid #e6defb;border-radius:14px;margin:10px;width:min(100%,320px);text-align:center">
+  <label for="nickname"><span class="en">Nickname *</span><span class="he">כינוי (חובה)</span></label>
+  <input id="nickname" maxlength="24" placeholder="הקלידו כינוי (חובה)" required style="padding:12px;border:3px solid #e6defb;border-radius:14px;margin:10px;width:min(100%,320px);text-align:center">
+  <div id="nickErr" class="hide" style="color:#d1264a;font-weight:bold;margin:2px 0 8px"><span class="en">Please type a nickname first!</span><span class="he">חובה להקליד כינוי כדי להתחיל</span></div>
   <div><button class="primary" id="startBtn" style="font-size:20px;padding:16px 26px"><span class="en">Start playing 🚀</span><span class="he">מתחילים!</span></button></div>
-  <p><span class="en">12 mixed questions · bonus wheel · surprises</span><span class="he">12 שאלות מעורבות · גלגל מזל · הפתעות</span></p>
+  <p><span class="en">14 mixed questions · bonus wheel · surprises</span><span class="he">14 שאלות מעורבות · גלגל מזל · הפתעות</span></p>
 </section>
 
 <section class="panel hide" id="gamePanel">
   <div class="topstats">
     <span class="pill"><span class="en">⭐ Score</span><b id="score">0</b></span>
     <span class="pill"><span class="en">🔥 Streak</span><b id="streak">0</b></span>
-    <span class="pill"><span class="en" id="progress">Question 1/12</span><span class="he" id="progressHe">שאלה 1/12</span></span>
+    <span class="pill"><span class="en">🎯 Ready</span><b id="livePct">0%</b></span>
+    <span class="pill"><span class="en" id="progress">Question 1/14</span><span class="he" id="progressHe">שאלה 1/14</span></span>
   </div>
   <div id="roundBar"><div id="roundFill"></div></div>
   <div id="questionLabel"></div>
@@ -140,6 +146,8 @@ footer{text-align:center;color:#6c6392;font-size:13px;padding:12px}
   <div id="stars" style="font-size:44px"></div>
   <div style="font-size:22px;font-weight:bold" id="finalScore"></div>
   <div id="finalAcc" style="margin:8px 0"></div>
+  <div id="gainText" style="font-size:21px;font-weight:bold;color:#6553c8;margin:8px 0"></div>
+  <div id="newWrap" class="hide"><b>⭐ מילים חדשות שנשלטו</b><div id="newList"></div></div>
   <div id="missedWrap" class="hide"><b><span class="en">Words to practice</span><span class="he">מילים לחזרה</span></b><div id="missedList"></div></div>
   <button class="primary" id="againBtn" style="font-size:19px"><span class="en">Play again</span><span class="he">משחקים שוב</span></button>
 </section>
@@ -149,7 +157,8 @@ footer{text-align:center;color:#6c6392;font-size:13px;padding:12px}
   <div style="font-size:36px;font-weight:900" id="readiness">0%</div>
   <div id="readinessBar"><div id="readinessFill"></div></div>
   <p id="readinessText">כל תרגול מקרב אותך למבחן 🌱</p>
-  <p><span class="he">סיבובים: <b id="rounds">0</b> · שיא: <b id="best">0</b> · מילים שנלמדו: <b id="knownCount">0</b>/51</span></p>
+  <p id="etaText" style="font-weight:bold;color:#6553c8"></p>
+  <p><span class="he">מילים נשלטות: <b id="knownCount">0</b>/51 · בדרך: <b id="learningCount">0</b></span><span class="he">סיבובים: <b id="rounds">0</b> · שיא: <b id="best">0</b></span></p>
 </section>
 <footer>אוצר המילים והדקדוק מדף החומר · מבנה השאלות לפי מבחן הדוגמה</footer>
 </main>
@@ -336,41 +345,64 @@ const bi=(en,he)=>`<span class="en">${en}</span><span class="he">${he}</span>`;
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const wEx=word=>{const w=W.find(x=>x[0]===word);return w?{en:w[2],he:w[3]}:null};
 const TEST_DATE=new Date(2026,9,29);
-const N=12;
+const N=14;
 let R=null,cur=null,mistakes=0,locked=false,bonusWon=false;
-let profile={nickname:"",rounds:0,best:0,known:[],first:0,attempts:0};
-try{profile={...profile,...JSON.parse(localStorage.getItem("brenner_eng_game_v2")||"{}")}}catch(e){}
-$("nickname").value=profile.nickname||"";
-function save(){try{localStorage.setItem("brenner_eng_game_v2",JSON.stringify(profile))}catch(e){}updateReadiness()}
+let profile={nickname:"",rounds:0,best:0,m:{},g:{}};
+try{profile={...profile,...JSON.parse(localStorage.getItem("brenner_eng_game_v3")||"{}")}}catch(e){}
+$("nickname").value=profile.nickname||"";$("nickname").addEventListener("input",()=>{$("nickErr").classList.add("hide");$("nickname").style.borderColor=""});
+function save(){try{localStorage.setItem("brenner_eng_game_v3",JSON.stringify(profile))}catch(e){}updateReadiness()}
+const MAXW=2,MAXG=3;
+function pctNow(){
+ let v=0;W.forEach(x=>v+=Math.min(1,(profile.m[x[0]]||0)/MAXW));v/=W.length;
+ const sk=["tobe","neg","ques","poss"];let g=0;sk.forEach(k=>g+=Math.min(1,(profile.g[k]||0)/MAXG));g/=sk.length;
+ return Math.floor(v*80+g*20+1e-9);
+}
+function credit(q,pts){
+ let up=false;
+ if(q.key){const b=profile.m[q.key]||0,a=Math.min(MAXW+1,Math.max(0,b+pts));profile.m[q.key]=a;if(b<MAXW&&a>=MAXW){up=true;R.newMast.push(q.key)}}
+ if(q.skill)profile.g[q.skill]=Math.min(MAXG+1.5,Math.max(0,(profile.g[q.skill]||0)+pts));
+ return up;
+}
 function updateReadiness(){
- const cov=Math.min(profile.known.length/51,1)*55,acc=(profile.attempts?profile.first/profile.attempts:0)*30,rd=Math.min(profile.rounds/5,1)*15;
- const pct=Math.round(Math.min(100,cov+acc+rd));
- $("readiness").textContent=pct+"%";$("readinessFill").style.width=pct+"%";
- $("rounds").textContent=profile.rounds;$("best").textContent=profile.best;$("knownCount").textContent=profile.known.length;
- $("readinessText").textContent=pct>=85?"מדהים! את/ה מוכנ/ה למבחן! 🎉":pct>=50?"מתקדמים יפה — ממשיכים! 💪":"כל שאלה מקרבת אותך למבחן 🌱";
+ const pct=pctNow();
+ const mast=W.filter(x=>(profile.m[x[0]]||0)>=MAXW).length,lrn=W.filter(x=>{const v=profile.m[x[0]]||0;return v>0&&v<MAXW}).length;
+ $("readiness").textContent=pct+"%";$("livePct").textContent=pct+"%";$("readinessFill").style.width=pct+"%";
+ $("rounds").textContent=profile.rounds;$("best").textContent=profile.best;$("knownCount").textContent=mast;$("learningCount").textContent=lrn;
+ let rem=0;W.forEach(x=>rem+=Math.max(0,MAXW-(profile.m[x[0]]||0)));
+ $("etaText").textContent=pct>=100?"כל המילים והדקדוק נשלטים — אתם מוכנים למבחן! 🏆":`בקצב הזה עוד כ-${Math.max(1,Math.ceil(rem/9))} סיבובים להכנה מלאה`;
+ $("readinessText").textContent=pct>=100?"100%! מוכנים למבחן! 🏆":pct>=85?"כמעט שם! עוד קצת ואתם אלופים 🏅":pct>=60?"מתקדמים יפה — ממשיכים! 💪":pct>=30?"התחלה מצוינת — כל סיבוב מוסיף! 🚀":"כל שאלה מקרבת אותך למבחן 🌱";
  const days=Math.ceil((TEST_DATE-new Date(new Date().setHours(0,0,0,0)))/864e5);
  $("daysLeft").textContent=days>1?`נשארו ${days} ימים למבחן · 29/10`:days===1?"המבחן מחר! בהצלחה · 29/10":days===0?"המבחן היום! בהצלחה! 🍀":"מתכוננים למבחן באנגלית";
 }
 
 /* ============ SOUND ============ */
-let AC=null;
-function ctx(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=AC||new C();if(AC.state==="suspended")AC.resume();return AC}catch(e){return null}}
-function tone(c,f,t,d,type,vol){const o=c.createOscillator(),g=c.createGain();o.type=type||"triangle";o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol||.07,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+d+.02)}
+let AC=null,MASTER=null,SOUND_ON=true;
+try{SOUND_ON=localStorage.getItem("brenner_eng_sound")!=="off"}catch(e){}
+function ctx(){
+ try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;
+  if(!AC){AC=new C();const comp=AC.createDynamicsCompressor();MASTER=AC.createGain();MASTER.gain.value=1.6;MASTER.connect(comp);comp.connect(AC.destination);
+   const b=AC.createBuffer(1,1,22050),s=AC.createBufferSource();s.buffer=b;s.connect(AC.destination);s.start(0)}
+  if(AC.state!=="running")AC.resume();return AC}catch(e){return null}
+}
+function tone(c,f,t,d,type,vol){const o=c.createOscillator(),g=c.createGain();o.type=type||"triangle";o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol||.2,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(MASTER);o.start(t);o.stop(t+d+.02)}
+function clap(c,t,vol){
+ const len=Math.floor(c.sampleRate*(.03+Math.random()*.05)),b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);
+ for(let j=0;j<len;j++)d[j]=(Math.random()*2-1)*Math.pow(1-j/len,3);
+ const s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();
+ s.buffer=b;f.type="bandpass";f.frequency.value=1400+Math.random()*2600;f.Q.value=.8;g.gain.value=vol;
+ s.connect(f);f.connect(g);g.connect(MASTER);s.start(t);
+}
 function applause(c,t0,dur,vol){
- for(let i=0;i<Math.floor(dur*28);i++){
-  const t=t0+Math.random()*dur,len=Math.floor(c.sampleRate*.05),b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);
-  for(let j=0;j<len;j++)d[j]=(Math.random()*2-1)*Math.pow(1-j/len,2);
-  const s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();
-  s.buffer=b;f.type="bandpass";f.frequency.value=1200+Math.random()*2500;g.gain.value=(vol||.35)*(.5+Math.random()*.5);
-  s.connect(f);f.connect(g);g.connect(c.destination);s.start(t);
- }
+ const n=Math.floor(dur*70);
+ for(let i=0;i<n;i++){const env=Math.sin(Math.PI*Math.min(1,i/n))*.6+.4;clap(c,t0+Math.random()*dur,vol*env*(.5+Math.random()*.5))}
 }
 function sound(kind){
- try{const c=ctx();if(!c)return;const n=c.currentTime;
-  if(kind==="bad"){tone(c,330,n,.18,"sawtooth",.05);tone(c,247,n+.16,.28,"sawtooth",.05)}
-  else if(kind==="tick"){tone(c,900,n,.04,"square",.03)}
-  else if(kind==="big"){[523,659,784,1047,1319].forEach((f,i)=>tone(c,f,n+i*.1,.25,"triangle",.07));applause(c,n,1.8,.45)}
-  else{[523,659,784,1047].forEach((f,i)=>tone(c,f,n+i*.08,.18,"triangle",.06));applause(c,n+.1,1.0,.3)}
+ if(!SOUND_ON)return;
+ try{const c=ctx();if(!c)return;const n=c.currentTime+.05;
+  if(kind==="bad"){tone(c,330,n,.2,"sawtooth",.12);tone(c,247,n+.18,.32,"sawtooth",.12)}
+  else if(kind==="tick"){tone(c,900,n,.04,"square",.06)}
+  else if(kind==="big"){[523,659,784,1047,1319,1568].forEach((f,i)=>tone(c,f,n+i*.09,.3,"triangle",.2));applause(c,n+.1,2.4,1.3)}
+  else{[523,659,784,1047].forEach((f,i)=>tone(c,f,n+i*.07,.22,"triangle",.18));applause(c,n+.1,1.4,1.0)}
  }catch(e){}
 }
 const HAS_TTS="speechSynthesis" in window;
@@ -405,36 +437,44 @@ function pick(key,pool){
  if(!av.length){R.used[key].clear();av=pool.map((_,i)=>i)}
  const i=rnd(av);R.used[key].add(i);return pool[i];
 }
+function pickLow(key,pool,wf){
+ R.used[key]=R.used[key]||new Set();
+ let idx=pool.map((_,i)=>i).filter(i=>!R.used[key].has(i));
+ if(!idx.length){R.used[key].clear();idx=pool.map((_,i)=>i)}
+ const sc=i=>{const w=wf(pool[i]);return (profile.m[w]||0)+(R.words.has(w)?3:0)+Math.random()*.9};
+ const i=idx.map(i=>[sc(i),i]).sort((a,b)=>a[0]-b[0])[0][1];
+ R.used[key].add(i);R.words.add(wf(pool[i]));return pool[i];
+}
 const blank=s=>s.replace(/___/g,"____");
 const say=s=>s.replace(/_+/g,"blank");
 const B={
- vocabEH(){const w=pick("w",W);return{title:bi("Choose the Hebrew translation","בחרו את התרגום לעברית"),prompt:w[0],pclass:"big",pdir:"ltr",opts:shuffle([w[1],...shuffle(W.filter(x=>x!==w)).slice(0,3).map(x=>x[1])]),ans:w[1],adir:"rtl",say:w[0],sayKind:"word",ex:{en:w[2],he:w[3]},key:w[0],miss:w[0]}},
- vocabHE(){const w=pick("w",W);return{title:bi("Choose the English word","בחרו את המילה באנגלית"),prompt:w[1],pclass:"big",pdir:"rtl",opts:shuffle([w[0],...shuffle(W.filter(x=>x!==w)).slice(0,3).map(x=>x[0])]),ans:w[0],adir:"ltr",say:w[0],sayKind:"word",ex:{en:w[2],he:w[3]},key:w[0],miss:w[0]}},
- wordbank(){const it=pick("wb",WB);return{title:bi("Fill in the missing word","השלימו את המילה החסרה"),prompt:blank(it[0]),pclass:"sentence",pdir:"ltr",opts:shuffle([it[1],...it[2]]),ans:it[1],adir:"ltr",say:say(it[0]),sayKind:"q",ex:wEx(it[1]),key:it[1],miss:it[1]}},
- circle(){const it=pick("ci",CIRCLE);return{title:bi("Circle the correct word","הקיפו את המילה הנכונה"),prompt:blank(it[0]),pclass:"sentence",pdir:"ltr",opts:shuffle([it[2],it[1]]),ans:it[1],adir:"ltr",say:say(it[0]),sayKind:"q",ex:it[3]?{en:it[3][0],he:it[3][1]}:wEx(it[1]),key:it[1],miss:it[1]}},
- tobe(){const it=pick("tb",TOBE);return{title:bi("Complete with am / is / are","השלימו עם am / is / are"),prompt:blank(it[0]),pclass:"sentence",pdir:"ltr",opts:["am","is","are"],ans:it[1],adir:"ltr",say:say(it[0]),sayKind:"q",ex:MODEL.tobe}},
- neg(){const it=pick("ng",NEG);return{title:bi("Circle the correct form","הקיפו את הצורה הנכונה"),prompt:blank(it[0]),pclass:"sentence",pdir:"ltr",opts:["am not","isn't","aren't"],ans:it[1],adir:"ltr",say:say(it[0]),sayKind:"q",ex:MODEL.neg}},
- ques(){const it=pick("qs",QUES);return{title:bi("Am / Is / Are?","בחרו: Am / Is / Are"),prompt:blank(it[0]),pclass:"sentence",pdir:"ltr",opts:["Am","Is","Are"],ans:it[1],adir:"ltr",say:say(it[0]),sayKind:"q",ex:MODEL.ques}},
+ vocabEH(){const w=pickLow("w",W,x=>x[0]);return{title:bi("Choose the Hebrew translation","בחרו את התרגום לעברית"),prompt:w[0],pclass:"big",pdir:"ltr",opts:shuffle([w[1],...shuffle(W.filter(x=>x!==w)).slice(0,3).map(x=>x[1])]),ans:w[1],adir:"rtl",say:w[0],sayKind:"word",ex:{en:w[2],he:w[3]},key:w[0],miss:w[0]}},
+ vocabHE(){const w=pickLow("w",W,x=>x[0]);return{title:bi("Choose the English word","בחרו את המילה באנגלית"),prompt:w[1],pclass:"big",pdir:"rtl",opts:shuffle([w[0],...shuffle(W.filter(x=>x!==w)).slice(0,3).map(x=>x[0])]),ans:w[0],adir:"ltr",say:w[0],sayKind:"word",ex:{en:w[2],he:w[3]},key:w[0],miss:w[0]}},
+ wordbank(){const it=pickLow("wb",WB,x=>x[1]);return{title:bi("Fill in the missing word","השלימו את המילה החסרה"),prompt:blank(it[0]),pclass:"sentence",pdir:"ltr",opts:shuffle([it[1],...it[2]]),ans:it[1],adir:"ltr",say:say(it[0]),sayKind:"q",ex:wEx(it[1]),key:it[1],miss:it[1]}},
+ circle(){const it=pickLow("ci",CIRCLE,x=>x[1]);return{title:bi("Circle the correct word","הקיפו את המילה הנכונה"),prompt:blank(it[0]),pclass:"sentence",pdir:"ltr",opts:shuffle([it[2],it[1]]),ans:it[1],adir:"ltr",say:say(it[0]),sayKind:"q",ex:it[3]?{en:it[3][0],he:it[3][1]}:wEx(it[1]),key:it[1],miss:it[1]}},
+ tobe(){const it=pick("tb",TOBE);return{title:bi("Complete with am / is / are","השלימו עם am / is / are"),prompt:blank(it[0]),pclass:"sentence",pdir:"ltr",opts:["am","is","are"],ans:it[1],adir:"ltr",say:say(it[0]),sayKind:"q",ex:MODEL.tobe,skill:"tobe"}},
+ neg(){const it=pick("ng",NEG);return{title:bi("Circle the correct form","הקיפו את הצורה הנכונה"),prompt:blank(it[0]),pclass:"sentence",pdir:"ltr",opts:["am not","isn't","aren't"],ans:it[1],adir:"ltr",say:say(it[0]),sayKind:"q",ex:MODEL.neg,skill:"neg"}},
+ ques(){const it=pick("qs",QUES);return{title:bi("Am / Is / Are?","בחרו: Am / Is / Are"),prompt:blank(it[0]),pclass:"sentence",pdir:"ltr",opts:["Am","Is","Are"],ans:it[1],adir:"ltr",say:say(it[0]),sayKind:"q",ex:MODEL.ques,skill:"ques"}},
  poss(){const it=pick("ps",POSS);const all=["my","his","her","our","their"];const start=it[0].startsWith("___");const f=x=>start?cap(x):x;
-  return{title:bi("Possessive determiners","כינויי קניין: my / his / her / our / their"),prompt:blank(it[0]),pclass:"sentence",pdir:"ltr",opts:shuffle([it[1],...shuffle(all.filter(x=>x!==it[1])).slice(0,3)]).map(f),ans:f(it[1]),adir:"ltr",say:say(it[0]),sayKind:"q",ex:MODEL.poss}},
+  return{title:bi("Possessive determiners","כינויי קניין: my / his / her / our / their"),prompt:blank(it[0]),pclass:"sentence",pdir:"ltr",opts:shuffle([it[1],...shuffle(all.filter(x=>x!==it[1])).slice(0,3)]).map(f),ans:f(it[1]),adir:"ltr",say:say(it[0]),sayKind:"q",ex:MODEL.poss,skill:"poss"}},
  day(){const i=Math.floor(Math.random()*7),after=Math.random()<.6,a=DAYS[(i+(after?1:6))%7];
   return{title:bi("Days of the week","ימי השבוע"),prompt:`Which day comes ${after?"after":"before"} ${DAYS[i]}?`,pclass:"sentence",pdir:"ltr",opts:shuffle([a,...shuffle(DAYS.filter(d=>d!==a&&d!==DAYS[i])).slice(0,3)]),ans:a,adir:"ltr",say:`Which day comes ${after?"after":"before"} ${DAYS[i]}?`,sayKind:"q",ex:MODEL.day}},
  number(){const n=pick("nm",NUMS),c=CONF[n[1]],others=shuffle(NUMS.filter(x=>x[1]!==n[1]&&x[1]!==c)).slice(0,3).map(x=>x[1]);
   const opts=shuffle([n[1],...(c?[c,others[0],others[1]]:others)]);
   return{title:bi("Numbers","מספרים — איזו מילה מתאימה?"),prompt:String(n[0]),pclass:"big",pdir:"ltr",opts,ans:n[1],adir:"ltr",say:n[1],sayKind:"word",ex:MODEL.num}},
- spell(){const cand=W.filter(w=>/^[a-z]{4,}$/i.test(w[0]));const w=pick("sp",cand);const s=w[0].toLowerCase(),set=new Set();let g=0;
+ spell(){const cand=W.filter(w=>/^[a-z]{4,}$/i.test(w[0]));const w=pickLow("sp",cand,x=>x[0]);const s=w[0].toLowerCase(),set=new Set();let g=0;
   while(set.size<3&&g++<60){const p=1+Math.floor(Math.random()*(s.length-1)),m=Math.floor(Math.random()*4);let v;
    if(m===0)v=s.slice(0,p)+s.slice(p+1);else if(m===1&&p<s.length-1)v=s.slice(0,p)+s[p+1]+s[p]+s.slice(p+2);else if(m===2)v=s.slice(0,p)+s[p]+s.slice(p);else v=s.slice(0,p)+rnd("aeiou".split("").filter(x=>x!==s[p]))+s.slice(p+1);
    if(v&&v!==s)set.add(v)}
   const fix=x=>w[0][0]!==s[0]?cap(x):x;
-  return{title:bi("Which spelling is correct?","איזה איות נכון?"),prompt:w[1],pclass:"big",pdir:"rtl",opts:shuffle([w[0],...[...set].map(fix)]),ans:w[0],adir:"ltr",say:w[0],sayKind:"word",ex:{en:w[2],he:w[3]},key:w[0]}},
+  return{title:bi("Which spelling is correct?","איזה איות נכון?"),prompt:w[1],pclass:"big",pdir:"rtl",opts:shuffle([w[0],...[...set].map(fix)]),ans:w[0],adir:"ltr",say:w[0],sayKind:"word",ex:{en:w[2],he:w[3]},key:w[0],miss:w[0]}},
  dialogue(){const it=pick("dl",DIAL);return{title:bi("Match the answer","התאימו את התשובה המתאימה"),prompt:it[0],pclass:"sentence",pdir:"ltr",opts:shuffle([it[1],...shuffle(DIAL.filter(x=>x!==it)).slice(0,3).map(x=>x[1])]),ans:it[1],adir:"ltr",say:it[0],sayKind:"q",ex:{en:it[0],he:it[2]}}},
  reading(){const p=pick("rp",PASS),q=pick("rq",p.q);return{title:bi("Read and answer","קראו וענו"),passage:p.t,prompt:q[0],pclass:"sentence",pdir:"ltr",opts:shuffle([q[1],...q[2]]),ans:q[1],adir:"ltr",say:q[0],sayKind:"q",ex:{en:q[3][0],he:q[3][1]}}}
 };
 const BONUS_TITLES={wordbank:["🧺","Word Bank","מחסן מילים"],circle:["⭕","Circle the word","הקיפו את המילה"],tobe:["✏️","To Be","am / is / are"],neg:["🚫","Negative forms","צורת שלילה"],ques:["❓","Questions","שאלות עם Am / Is / Are"],poss:["🎒","Possessives","כינויי קניין"],spell:["🔤","Spelling","איות"],dialogue:["💬","Dialogue","שיחה"],reading:["📖","Reading","הבנת הנקרא"],vocabEH:["🌍","Translate","תרגום"]};
 
 function buildDeck(){
- const t=shuffle(["vocabEH","vocabEH","vocabHE","vocabHE","wordbank","wordbank","circle","tobe","neg","ques","poss",rnd(["dialogue","reading"])]);
+ const t=shuffle(["vocabEH","vocabEH","vocabEH","vocabHE","vocabHE","wordbank","wordbank","circle","tobe","neg","ques","poss","spell",rnd(["dialogue","reading"])]);
  return t.map(x=>B[x]());
 }
 function fillOptions(container,q,onPick){
@@ -445,8 +485,11 @@ function fillOptions(container,q,onPick){
 /* ============ MAIN GAME ============ */
 function start(){
  ctx();
- profile.nickname=$("nickname").value.trim();save();
- R={deck:[],i:0,score:0,streak:0,correct:0,since:0,wheel:false,bq:shuffle(["wordbank","circle","tobe","neg","ques","poss","spell","dialogue","reading","vocabEH"]),used:{},missed:new Set(),first:0,tries:0};
+ const nick=$("nickname").value.trim();
+ if(!nick){const inp=$("nickname");$("nickErr").classList.remove("hide");inp.style.borderColor="#e0334c";inp.classList.remove("shake");void inp.offsetWidth;inp.classList.add("shake");inp.focus();sound("bad");return}
+ $("nickErr").classList.add("hide");$("nickname").style.borderColor="";
+ profile.nickname=nick;save();
+ R={deck:[],i:0,score:0,streak:0,correct:0,since:0,wheel:false,bq:shuffle(["wordbank","circle","tobe","neg","ques","poss","spell","dialogue","reading","vocabEH"]),used:{},missed:new Set(),first:0,tries:0,words:new Set(),newMast:[],pct0:pctNow()};
  R.deck=buildDeck();
  $("score").textContent=0;$("streak").textContent=0;
  $("startPanel").classList.add("hide");$("resultPanel").classList.add("hide");$("gamePanel").classList.remove("hide");
@@ -469,15 +512,15 @@ function showQuestion(){
 }
 function answer(btn,val){
  if(locked||btn.classList.contains("wrong"))return;
- R.tries++;profile.attempts++;
+ R.tries++;
  if(val===cur.ans){
   locked=true;btn.classList.add("correct");
   const pts=mistakes===0?10:5;R.score+=pts;R.correct++;R.since++;R.streak++;
-  if(mistakes===0){R.first++;profile.first++}
-  if(cur.key&&!profile.known.includes(cur.key))profile.known.push(cur.key);
+  if(mistakes===0)R.first++;
+  const mastered=credit(cur,mistakes===0?1:.5);
   $("score").textContent=R.score;$("streak").textContent=R.streak;
-  $("message").innerHTML=`<span style="color:#1f8a58">Correct! נכון מאוד! +${pts} 🎉</span>`;
-  const g=rnd(GOOD);sound("good");teacher(R.streak>=3?"celebrate":"jump",g[0],g[1]);burst(["⭐","🎉","✨","💜"]);
+  $("message").innerHTML=`<span style="color:#1f8a58">Correct! נכון מאוד! +${pts} 🎉</span>${mastered?`<br><span style="color:#7a4bd8">⭐ המילה "${cur.key}" נשלטת!</span>`:""}`;
+  const g=rnd(GOOD);sound("good");teacher(R.streak>=3?"celebrate":"jump",g[0],g[1]);burst(mastered?["⭐","🌟","🏅","🎉"]:["⭐","🎉","✨","💜"]);
   [...$("answers").children].forEach(b=>{b.style.pointerEvents="none"});
   save();
   const nb=$("nextBtn");nb.classList.remove("hide");
@@ -531,14 +574,14 @@ function runBonusQuestion(q,pts){
  let done=false,wrongs=0;
  fillOptions($("bonusOptions"),q,(b,v)=>{
   if(done||b.classList.contains("wrong"))return;
-  if(v===q.ans){done=true;b.classList.add("correct");bonusWin(pts)}
+  if(v===q.ans){done=true;b.classList.add("correct");credit(q,wrongs===0?1:.5);bonusWin(pts)}
   else{wrongs++;b.classList.add("wrong");$("bonusMessage").innerHTML=bi("Oops! Try again!","נסו שוב — האפשרויות נשארות");sound("bad");teacher("sad",rnd(BAD)[0],"");
    if(wrongs>=2&&q.ex&&HAS_TTS){$("bonusMessage").innerHTML+=`<span class="en" style="font-weight:normal">💡 ${q.ex.en}</span>`}}
  });
 }
 function bonusWin(pts){
  if(bonusWon)return;bonusWon=true;
- R.score+=pts;$("score").textContent=R.score;
+ R.score+=pts;save();$("score").textContent=R.score;
  $("bonusMessage").innerHTML=bi("Amazing! +"+pts+" points 🎉","מדהים! נכון!");
  sound("big");teacher("celebrate","Fantastic!","המורה רוקדת משמחה! 🎉");burst(["🎉","🌟","🎊","🏆"]);
  $("closeBonusBtn").classList.remove("hide");$("spinBtn").classList.add("hide");
@@ -579,7 +622,7 @@ function letterChallenge(n){
    if(bonusWon||b.classList.contains("used"))return;
    const target=pos.find(i=>!filled[i]&&chars[i].toLowerCase()===L);
    if(target!==undefined){filled[target]=chars[target];b.classList.add("used");b.disabled=true;sound("tick");show();
-    if(pos.every(i=>filled[i]))bonusWin(n===1?8:12);
+    if(pos.every(i=>filled[i])){credit({key:word},1);bonusWin(n===1?8:12)}
     else $("bonusMessage").innerHTML=bi("Good! One more!","יפה! עוד אות אחת");}
    else{b.classList.add("wrong");b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake");$("bonusMessage").innerHTML=bi("Not this letter — try again!","לא האות הזו — נסו שוב");sound("bad");teacher("sad","Oops! Try again!","");setTimeout(()=>b.classList.remove("wrong"),700)}
   };
@@ -597,9 +640,14 @@ function finish(){
  $("stars").textContent="⭐".repeat(st)+"☆".repeat(3-st);
  $("finalScore").textContent=`${profile.nickname?profile.nickname+" · ":""}${R.score} נקודות`;
  $("finalAcc").textContent=`דיוק: ${acc}% · תשובות נכונות בניסיון ראשון: ${R.first}/${N}`;
+ const p1=pctNow(),gain=p1-R.pct0;
+ $("gainText").textContent=`מוכנות למבחן: ${R.pct0}% ← ${p1}%`+(gain>0?` (+${gain}%) 🚀`:"");
+ $("newList").innerHTML=R.newMast.map(x=>`<span>${x}</span>`).join("");$("newWrap").classList.toggle("hide",!R.newMast.length);
  const ms=[...R.missed];$("missedList").innerHTML=ms.map(x=>`<span>${x}</span>`).join("");$("missedWrap").classList.toggle("hide",!ms.length);
  sound("big");teacher("celebrate","Amazing! You did it!","המורה רוקדת משמחה! 🎉");burst(["🏆","🎉","🌟","🎊"]);
 }
+const sbtn=$("soundBtn"),paintSound=()=>sbtn.textContent=SOUND_ON?"🔊":"🔇";paintSound();
+sbtn.onclick=()=>{SOUND_ON=!SOUND_ON;try{localStorage.setItem("brenner_eng_sound",SOUND_ON?"on":"off")}catch(e){}paintSound();if(SOUND_ON){ctx();sound("good")}};
 $("againBtn").onclick=start;
 $("startBtn").onclick=start;
 updateReadiness();
