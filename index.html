@@ -30,7 +30,7 @@ button,input{font:inherit}button{border:0;border-radius:12px;padding:11px 14px;m
 @keyframes pop{from{opacity:0;transform:scale(.7) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
 .wheel{width:132px;height:132px;border-radius:50%;background:conic-gradient(#ffc857 0 60deg,#a99af4 60deg 120deg,#73d7b2 120deg 180deg,#ff9cb1 180deg 240deg,#8ed8f5 240deg 300deg,#ffc857 300deg);display:grid;place-items:center;margin:10px auto;font-size:42px;border:7px solid white;box-shadow:0 5px 20px #3333;position:relative}
 .wheel:after{content:"▼";position:absolute;top:-15px;color:#4a368c;font-size:22px}
-.wheel.spin{animation:spinWheel 1.4s cubic-bezier(.15,.75,.18,1) forwards}
+.wheel.spin{animation:spinWheel 1.4s cubic-bezier(.15,.75,.18,1) forwards}#popupWheel{cursor:pointer}#spinChallengeBtn{font-size:17px}
 @keyframes spinWheel{to{transform:rotate(1080deg)}}
 #letterTiles{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin:16px 0}
 .letterTile{min-width:48px;min-height:52px;background:#eee9ff;color:#493a9c;font-size:25px;border:2px solid #d8cff8;box-shadow:0 4px 0 #d8cff8}
@@ -127,7 +127,8 @@ button,input{font:inherit}button{border:0;border-radius:12px;padding:11px 14px;m
  <div class="modalCard">
   <div style="font-size:13px;color:#76699f;font-weight:bold">BONUS ROUND · סיבוב בונוס</div>
   <h2 id="bonusTitle">🎡 גלגל המזל של המורה לאנגלית!</h2>
-  <p id="bonusIntro">המורה מסובבת את הגלגל כדי לחשוף את אתגר האותיות.</p>
+  <p id="bonusIntro">לחצו על הגלגל כדי לבחור אתגר: אות חסרה אחת או שתי אותיות חסרות.</p>
+  <button id="spinChallengeBtn" class="primary">🎡 סובבו את הגלגל!</button>
   <div id="popupWheel" class="wheel">🎡</div>
   <h3 id="bonusHebrew" style="font-size:clamp(22px,5vw,30px);margin:12px 0">המילה בעברית</h3>
   <p id="bonusInstruction">איזו מילה באנגלית מתאימה? השלימו את האותיות החסרות.</p>
@@ -348,72 +349,86 @@ function startBonus(){
  bonusWord=shuffle(words.filter(w=>w!==current))[0];
  $("bonusModal").classList.remove("hide");
  $("bonusHebrew").textContent=bonusWord[1];
- $("bonusIntro").textContent="מיסטר/מיס? לא! המורה לאנגלית מסובבת את הגלגל 🎡";
- $("bonusMessage").textContent="הגלגל מסתובב… Spin, spin, spin!";
+ $("bonusIntro").textContent="לחצו על הכפתור או על הגלגל כדי לסובב ולבחור את סוג האתגר.";
+ $("bonusInstruction").textContent="The wheel chooses your challenge | הגלגל בוחר את האתגר שלך";
+ $("bonusMessage").textContent="מוכנים? Spin the wheel!";
  $("bonusMessage").style.background="#f8f5ff";
- $("bonusBlanks").textContent="";
+ $("bonusBlanks").textContent="🎡";
  $("letterTiles").innerHTML="";
  $("closeBonusBtn").classList.add("hide");
  $("spinAgainBtn").classList.add("hide");
- const wheel=$("popupWheel");wheel.classList.remove("spin");void wheel.offsetWidth;wheel.classList.add("spin");
- setTimeout(()=>{
-   const chars=[...bonusWord[0]];
-   const positions=chars.map((c,i)=>/[a-z]/i.test(c)?i:-1).filter(i=>i>=0);
-   const count=Math.min(2,Math.max(1,Math.floor(positions.length/4)));
-   const hidden=shuffle(positions).slice(0,count);
-   $("bonusBlanks").textContent=chars.map((c,i)=>hidden.includes(i)?"_":c).join(" ");
-   $("bonusIntro").textContent="The word means | המילה בעברית:";
-   $("bonusInstruction").textContent="בחרו את האותיות החסרות לפי הסדר. Tap the missing letters in order!";
-   $("bonusMessage").textContent="בחרו את האותיות החסרות למילה באנגלית. You can do it!";
-   let available=hidden.map(i=>chars[i]);
-   // Add distractor letters, then shuffle tiles. Each click fills the next blank.
-   const alphabet="abcdefghijklmnopqrstuvwxyz";
-   while(available.length<Math.max(5,hidden.length+3)){
-     const ch=alphabet[Math.floor(Math.random()*alphabet.length)];
-     if(!available.includes(ch))available.push(ch);
-   }
-   available=shuffle(available);
-   let chosen=[];
-   available.forEach(letter=>{
-     const b=document.createElement("button");
-     b.className="letterTile";b.textContent=letter;
-     b.onclick=()=>{
-       if(chosen.length>=hidden.length||b.classList.contains("used")||challengeDone)return;
-       chosen.push({letter,b});b.classList.add("used");
-       const display=chars.map((c,i)=>{const at=hidden.indexOf(i);return at>=0?(chosen[at]?.letter||"_"):c}).join(" ");
-       $("bonusBlanks").textContent=display;
-       if(chosen.length===hidden.length){
-         const answer=chosen.map(x=>x.letter).join("");
-         const target=hidden.map(i=>chars[i]).join("");
-         if(answer===target){
-           challengeDone=true;score+=10;$("score").textContent=score;
-           $("bonusMessage").textContent="🎉 נכון! The teacher spins the letters! +10 נקודות";
-           $("bonusMessage").style.background="#d9f8e8";
-           $("bonusBlanks").animate([{transform:"rotate(0deg) scale(1)"},{transform:"rotate(360deg) scale(1.18)"},{transform:"rotate(720deg) scale(1)"}],{duration:900,easing:"ease-out"});
-           playReaction("good");$("teacher").className="teacher celebrate";$("teacherSpeech").innerHTML="Fantastic!<small>המורה לאנגלית רוקדת משמחה! 🎉</small>";celebrate(true);
-           profile.known=Array.from(new Set([...profile.known,bonusWord[0]]));save();
-           $("closeBonusBtn").classList.remove("hide");$("spinAgainBtn").classList.add("hide");
-         }else{
-           $("bonusMessage").textContent="אופס! לא בדיוק — המורה מנסה לסובב שוב! Try again!";
-           $("bonusMessage").style.background="#ffe4e9";playReaction("wrong");if(effectsEnabled)speakReactionText("Oops! Try again!");
-           $("spinAgainBtn").classList.remove("hide");
-           $("popupWheel").classList.remove("spin");
-         }
-       }
-     };
-     $("letterTiles").appendChild(b);
-   });
- },1450);
- $("spinAgainBtn").onclick=()=>{
-   $("spinAgainBtn").classList.add("hide");$("bonusMessage").textContent="המורה מנסה שוב… Spin again!";
+ $("spinChallengeBtn").classList.remove("hide");
+ $("spinChallengeBtn").disabled=false;
+ $("popupWheel").classList.remove("spin");
+ let chosenCount=1, hidden=[], chars=[], chosen=[], initialized=false;
+ function spinChallenge(){
+   if(initialized||challengeDone)return;
+   initialized=true;
+   $("spinChallengeBtn").disabled=true;
+   $("spinChallengeBtn").textContent="הגלגל מסתובב…";
+   $("bonusMessage").textContent="Spin, spin, spin! 🎡";
    const wheel=$("popupWheel");wheel.classList.remove("spin");void wheel.offsetWidth;wheel.classList.add("spin");
-   // Clear selected letters and reset tile availability; retain the same word.
    setTimeout(()=>{
-     chosen=[];$("bonusBlanks").textContent=chars.map((c,i)=>hidden.includes(i)?"_":c).join(" ");
-     $("letterTiles").querySelectorAll("button").forEach(b=>b.classList.remove("used"));
-     $("bonusMessage").textContent="נסו שוב! You can do it!";
-   },1100);
- };
+     // Wheel randomly chooses whether to hide one or two letters.
+     chosenCount=Math.random()<.5?1:2;
+     chars=[...bonusWord[0]];
+     const positions=chars.map((c,i)=>/[a-z]/i.test(c)?i:-1).filter(i=>i>=0);
+     chosenCount=Math.min(chosenCount,positions.length);
+     hidden=shuffle(positions).slice(0,chosenCount).sort((a,b)=>a-b);
+     $("bonusTitle").textContent=chosenCount===1?"🎡 גלגל המזל: אות אחת חסרה!":"🎡 גלגל המזל: שתי אותיות חסרות!";
+     $("bonusMessage").textContent=chosenCount===1?"🎯 יצאה אות אחת — קל יותר!":"🔥 יצאו שתי אותיות — אתגר קשה יותר!";
+     $("bonusIntro").textContent=chosenCount===1?"יצאה אות אחת! השלימו אותה כדי לזכות בבונוס.":"יצאו שתי אותיות! השלימו אותן לפי הסדר כדי לזכות בבונוס.";
+     $("bonusInstruction").textContent=chosenCount===1?"One missing letter | אות אחת חסרה — בחרו את האות הנכונה.":"Two missing letters | שתי אותיות חסרות — בחרו אותיות לפי הסדר.";
+     $("bonusBlanks").textContent=chars.map((c,i)=>hidden.includes(i)?"_":c).join(" ");
+     $("bonusMessage").textContent=chosenCount===1?"🎯 אתגר קל יותר — אות אחת!":"🔥 אתגר קשה יותר — שתי אותיות!";
+     $("spinChallengeBtn").classList.add("hide");
+     let available=hidden.map(i=>chars[i]);
+     const alphabet="abcdefghijklmnopqrstuvwxyz";
+     while(available.length<Math.max(5,hidden.length+3)){
+       const ch=alphabet[Math.floor(Math.random()*alphabet.length)];
+       if(!available.includes(ch))available.push(ch);
+     }
+     available=shuffle(available);
+     available.forEach(letter=>{
+       const b=document.createElement("button");b.className="letterTile";b.textContent=letter;
+       b.onclick=()=>{
+         if(challengeDone||chosen.length>=hidden.length||b.classList.contains("used"))return;
+         chosen.push({letter,b});b.classList.add("used");
+         $("bonusBlanks").textContent=chars.map((c,i)=>{const at=hidden.indexOf(i);return at>=0?(chosen[at]?.letter||"_"):c}).join(" ");
+         if(chosen.length===hidden.length){
+           const answer=chosen.map(x=>x.letter).join("");
+           const target=hidden.map(i=>chars[i]).join("");
+           if(answer===target){
+             challengeDone=true;score+=chosenCount===1?8:12;$("score").textContent=score;
+             $("bonusMessage").textContent=`🎉 נכון! ${chosenCount===1?"+8":" +12"} נקודות! The teacher celebrates!`;
+             $("bonusMessage").style.background="#d9f8e8";
+             $("bonusBlanks").animate([{transform:"rotate(0deg) scale(1)"},{transform:"rotate(360deg) scale(1.18)"},{transform:"rotate(720deg) scale(1)"}],{duration:900,easing:"ease-out"});
+             playReaction("good");$("teacher").className="teacher celebrate";$("teacherSpeech").innerHTML="Fantastic!<small>המורה לאנגלית רוקדת משמחה! 🎉</small>";celebrate(true);
+             profile.known=Array.from(new Set([...profile.known,bonusWord[0]]));save();
+             $("closeBonusBtn").classList.remove("hide");$("spinAgainBtn").classList.add("hide");
+           }else{
+             $("bonusMessage").textContent="אופס! לא נכון — כל האותיות מתאפסות. נסו שוב!";
+             $("bonusMessage").style.background="#ffe4e9";playReaction("wrong");
+             chosen=[];$("bonusBlanks").textContent=chars.map((c,i)=>hidden.includes(i)?"_":c).join(" ");
+             $("letterTiles").querySelectorAll("button").forEach(tile=>{tile.classList.remove("used");tile.disabled=false;});
+             $("spinAgainBtn").classList.remove("hide");
+           }
+         }
+       };
+       $("letterTiles").appendChild(b);
+     });
+     $("spinAgainBtn").onclick=()=>{
+       $("spinAgainBtn").classList.add("hide");
+       chosen=[];$("bonusBlanks").textContent=chars.map((c,i)=>hidden.includes(i)?"_":c).join(" ");
+       $("letterTiles").querySelectorAll("button").forEach(tile=>{tile.classList.remove("used");tile.disabled=false;});
+       $("bonusMessage").textContent="המורה מסובבת שוב! נסו מחדש.";
+       const w=$("popupWheel");w.classList.remove("spin");void w.offsetWidth;w.classList.add("spin");
+       setTimeout(()=>$("bonusMessage").textContent="You can do it! נסו שוב!",900);
+     };
+   },1400);
+ }
+ $("spinChallengeBtn").onclick=spinChallenge;
+ $("popupWheel").onclick=spinChallenge;
  $("closeBonusBtn").onclick=()=>{$("bonusModal").classList.add("hide");$("nextBtn").onclick=nextQuestion;$("nextBtn").textContent=idx===deck.length-1?"לתוצאות 🏆":"לשאלה הבאה ←";$("nextBtn").classList.remove("hide");};
 }
 function celebrate(big){const emojis=big?["🎉","⭐","✨","🏆","💜","🎊"]:["⭐","✨","🎉"];for(let i=0;i<(big?18:8);i++){let s=document.createElement("span");s.className="spark";s.textContent=emojis[Math.floor(Math.random()*emojis.length)];s.style.left=(8+Math.random()*84)+"vw";s.style.top=(20+Math.random()*60)+"vh";document.body.appendChild(s);setTimeout(()=>s.remove(),1200)}try{const A=window.AudioContext||window.webkitAudioContext;if(A){let ctx=new A(),o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";o.frequency.value=big?880:660;g.gain.value=.06;o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.14);o.onended=()=>ctx.close()}}catch(e){}}
