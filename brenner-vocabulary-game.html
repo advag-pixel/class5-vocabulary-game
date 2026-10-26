@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>אתגר אוצר המילים | כיתה ה׳ — ברנר</title>
+<style>
+:root{--ink:#242044;--purple:#6254d9;--pale:#f0edff;--mint:#c9f7df;--pink:#ffe0e7;--gold:#ffe7a8;--white:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(135deg,#f5f1ff,#e9f8ff);color:var(--ink);font-family:Arial,sans-serif;padding:18px}
+main{max-width:900px;margin:auto}
+header{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+h1{margin:8px 0;color:var(--purple);font-size:clamp(26px,5vw,38px)}
+.subtitle{margin:4px 0 16px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:16px;align-items:start}
+.card{background:rgba(255,255,255,.94);border-radius:22px;padding:20px;margin:12px 0;box-shadow:0 8px 24px #312a6310;border:1px solid #ffffff}
+button,input,select{font:inherit}
+button{border:0;border-radius:14px;padding:12px 15px;margin:5px;cursor:pointer;font-weight:700;transition:transform .12s}
+button:hover{transform:translateY(-1px)}
+button:disabled{opacity:.65;cursor:default;transform:none}
+.primary{background:var(--purple);color:white}
+.mode{background:#e9e5ff;color:#44399f}
+.secondary{background:#eaf7ff;color:#254b68}
+.pill{display:inline-block;background:#f0edff;border-radius:999px;padding:7px 11px;font-size:14px;margin:3px}
+.topline{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.progressTrack{height:12px;background:#e8e6f5;border-radius:999px;overflow:hidden;margin:10px 0}
+.progressFill{height:100%;width:0;background:linear-gradient(90deg,#5bc99a,#6857dc);transition:width .3s}
+#readinessNum{font-size:36px;font-weight:800;color:var(--purple)}
+.side{position:sticky;top:12px}
+.side .card{margin-top:12px}
+#word{font-size:clamp(30px,6vw,44px);font-weight:800;margin:22px 0}
+#answers{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.answer{background:#f1efff;color:#29234f;min-height:60px;margin:0;font-size:17px}
+.answer.correct{background:var(--mint)}
+.answer.wrong{background:var(--pink)}
+#message{min-height:30px;font-size:18px;font-weight:700;margin:14px 0}
+#next{width:100%;margin:12px 0 0}
+#challengeBox{background:#fff8df;border:2px dashed #f0c75e;border-radius:18px;padding:16px;margin:12px 0}
+#challengeOptions{display:flex;justify-content:center;flex-wrap:wrap}
+#finish{display:none}
+.small{color:#777;font-size:13px;line-height:1.5}
+input{width:100%;padding:12px;border:1px solid #d7d2ee;border-radius:12px;margin:6px 0 10px}
+.listWords{max-height:180px;overflow:auto;text-align:right;line-height:1.8}
+#playerStatus{font-size:14px;color:#555}
+footer{text-align:center;color:#777;font-size:12px;margin:20px}
+@media(max-width:720px){.layout{grid-template-columns:1fr}.side{position:static;order:-1}#answers{grid-template-columns:1fr 1fr}.card{padding:16px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div>
+    <h1>🎮 אתגר אוצר המילים</h1>
+    <p class="subtitle">כיתה ה׳ · בית ספר ברנר · מתכוננים למבחן ב־29/10</p>
+  </div>
+  <span class="pill">🌟 לומדים ומשתפרים</span>
+</header>
+
+<div class="layout">
+<section>
+  <div class="card">
+    <label for="nickname"><b>איך קוראים לך במשחק?</b></label>
+    <input id="nickname" maxlength="24" placeholder="כתבו שם או כינוי">
+    <div class="small">ההתקדמות נשמרת במכשיר ובדפדפן הזה. לא צריך לשחק יחד — כל אחד יכול להתאמן מתי שנוח לו.</div>
+    <button class="primary" onclick="saveNickname()">שומרים ומתחילים 🚀</button>
+  </div>
+
+  <div class="card">
+    <div class="topline"><b>בחרו מצב משחק</b><span class="pill">10 שאלות בסיבוב</span></div>
+    <button class="mode" onclick="setMode('en')">🇬🇧 אנגלית ← עברית</button>
+    <button class="mode" onclick="setMode('he')">🇮🇱 עברית ← אנגלית</button>
+    <button class="mode" onclick="setMode('mix')">🎲 מצב מעורב</button>
+  </div>
+
+  <div class="card" id="game">
+    <div class="topline">
+      <span class="pill">⭐ ניקוד: <b id="score">0</b></span>
+      <span class="pill" id="progress">שאלה 1 מתוך 10</span>
+    </div>
+    <div id="word">guitar</div>
+    <div id="answers"></div>
+    <p id="message" aria-live="polite"></p>
+    <div id="challengeBox" style="display:none">
+      <h3 id="challengeTitle">⚡ אתגר בונוס!</h3>
+      <p id="challengeText"></p>
+      <div id="challengeOptions"></div>
+      <p id="challengeMessage"></p>
+    </div>
+    <button class="primary" id="next" onclick="nextQuestion()" style="display:none">לשאלה הבאה ←</button>
+    <div id="finish">
+      <h2>🏆 סיימתם סיבוב!</h2>
+      <p id="final"></p>
+      <p id="roundTip"></p>
+      <button class="primary" onclick="start()">עוד סיבוב 🎉</button>
+      <button class="secondary" onclick="showWeakWords()">תרגול מילים שכדאי לחזק</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📚 כל המילים למבחן</h3>
+    <div id="list" class="listWords small"></div>
+  </div>
+</section>
+
+<aside class="side">
+  <div class="card">
+    <div class="topline"><b>🎯 מוכנות למבחן</b><span>29/10</span></div>
+    <div id="readinessNum">0%</div>
+    <div class="progressTrack"><div id="readinessBar" class="progressFill"></div></div>
+    <p id="readinessText">מתחילים את הדרך ל־100%!</p>
+    <div class="small">האחוז עולה לפי הצלחה בשאלות ובונוסים. הוא אומדן לתרגול, לא ציון רשמי.</div>
+  </div>
+  <div class="card">
+    <b>📈 ההתקדמות שלך</b>
+    <p>סיבובים שהושלמו: <b id="rounds">0</b></p>
+    <p>שיא ניקוד: <b id="best">0</b>/100</p>
+    <p>מילים שענית עליהן נכון: <b id="known">0</b>/51</p>
+    <button class="secondary" onclick="resetProgress()">איפוס ההתקדמות</button>
+    <p class="small">האיפוס מוחק את ההתקדמות המקומית של הכינוי במכשיר הזה.</p>
+  </div>
+  <div class="card">
+    <b>💡 טיפ קטן</b>
+    <p>אם טעית במילה, קראי אותה בקול ונסי שוב בסיבוב הבא. תרגול קצר כל יום עוזר לזכור.</p>
+  </div>
+</aside>
+</div>
+<footer>משחק תרגול לימודי · כיתה ה׳ · ברנר</footer>
+</main>
+
+<script>
+const words=[
+["student","תלמיד / תלמידה"],["guitar","גיטרה"],["piano","פסנתר"],["bathroom","שירותים / חדר אמבטיה"],
+["goal","מטרה / שער"],["flowers","פרחים"],["study","ללמוד"],["date","תאריך"],["building","בניין"],
+["toilet","שירותים"],["do","לעשות"],["market","שוק"],["candy","ממתק"],["Israel","ישראל"],
+["classroom","כיתה"],["dining room","חדר אוכל"],["throw","לזרוק"],["sofa","ספה"],["village","כפר"],
+["card","כרטיס"],["presents","מתנות"],["kick","לבעוט"],["sell","למכור"],["far","רחוק"],["same","אותו / אותה"],
+["pretty","יפה"],["end","סוף"],["hobby","תחביב"],["I'm sorry","אני מצטער / מצטערת"],["also","גם"],
+["other","אחר / אחרת"],["soon","בקרוב"],["month","חודש"],["year","שנה"],["hear","לשמוע"],["teach","ללמד"],
+["teacher","מורה"],["sweet","מתוק / מתוקה"],["doctor","רופא / רופאה"],["beach","חוף"],["happy","שמח / שמחה"],
+["friend","חבר / חברה"],["favorite","אהוב / מועדף"],["subject","מקצוע לימוד"],["trip","טיול"],["outside","בחוץ"],
+["school","בית ספר"],["art","אמנות"],["food","אוכל"],["sport","ספורט"],["lesson","שיעור"]
+];
+const STORE="brenner_vocab_v1";
+let mode="mix",deck=[],index=0,score=0,locked=false,challengeDone=false,profile={nickname:"",best:0,rounds:0,known:[],attempts:0,correct:0};
+function shuffle(a){return a.slice().sort(()=>Math.random()-.5)}
+function loadProfile(){
+ try{const p=JSON.parse(localStorage.getItem(STORE)||"{}");if(p&&typeof p==="object")profile={...profile,...p};}catch(e){}
+ document.getElementById("nickname").value=profile.nickname||"";
+ updateStats();
+}
+function saveProfile(){localStorage.setItem(STORE,JSON.stringify(profile));updateStats()}
+function saveNickname(){profile.nickname=document.getElementById("nickname").value.trim().slice(0,24)||"שחקן/ית";saveProfile();start()}
+function setMode(m){mode=m;start()}
+function start(){
+ if(!profile.nickname){profile.nickname=document.getElementById("nickname").value.trim()||"שחקן/ית";document.getElementById("nickname").value=profile.nickname;saveProfile()}
+ deck=shuffle(words).slice(0,10);index=0;score=0;locked=false;challengeDone=false;
+ document.getElementById("score").textContent="0";document.getElementById("finish").style.display="none";
+ document.getElementById("word").style.display="block";document.getElementById("answers").style.display="grid";
+ document.getElementById("message").style.display="block";document.getElementById("challengeBox").style.display="none";
+ document.getElementById("next").style.display="none";showQuestion()
+}
+function showQuestion(){
+ locked=false;challengeDone=false;
+ const w=deck[index];const reverse=mode==="he"||(mode==="mix"&&Math.random()<.5);
+ const question=reverse?w[1]:w[0],correct=reverse?w[0]:w[1];
+ document.getElementById("word").textContent=question;
+ document.getElementById("progress").textContent=`שאלה ${index+1} מתוך ${deck.length}`;
+ document.getElementById("message").textContent="";document.getElementById("next").style.display="none";
+ const wrong=shuffle(words.filter(x=>x!==w)).slice(0,3).map(x=>reverse?x[0]:x[1]);
+ const box=document.getElementById("answers");box.innerHTML="";
+ shuffle([correct,...wrong]).forEach(answer=>{
+  const b=document.createElement("button");b.className="answer";b.textContent=answer;
+  b.onclick=()=>choose(b,answer,correct,w[0]);box.appendChild(b)
+ });
+}
+function choose(button,answer,correct,englishWord){
+ if(locked)return;locked=true;profile.attempts++;
+ document.querySelectorAll(".answer").forEach(b=>b.disabled=true);
+ if(answer===correct){
+  score+=10;profile.correct++;if(!profile.known.includes(englishWord))profile.known.push(englishWord);
+  button.classList.add("correct");document.getElementById("message").textContent="נכון מאוד! ⭐ +10 נקודות";
+  document.getElementById("message").style.color="#18864b";
+ }else{
+  button.classList.add("wrong");document.querySelectorAll(".answer").forEach(b=>{if(b.textContent===correct)b.classList.add("correct")});
+  document.getElementById("message").textContent="כמעט! התשובה הנכונה: "+correct;
+  document.getElementById("message").style.color="#b52e48";
+ }
+ document.getElementById("score").textContent=score;saveProfile();showChallenge();
+}
+function showChallenge(){
+ const box=document.getElementById("challengeBox"),opts=document.getElementById("challengeOptions");
+ box.style.display="block";opts.innerHTML="";document.getElementById("challengeMessage").textContent="";
+ document.getElementById("challengeTitle").textContent=["⚡ אתגר בזק!","🧠 אתגר זיכרון!","🎯 אתגר בונוס!"][Math.floor(Math.random()*3)];
+ const w=deck[index],reverse=Math.random()<.5,correct=reverse?w[0]:w[1],question=reverse?w[1]:w[0];
+ document.getElementById("challengeText").textContent="שאלת בונוס: מה הפירוש של "+question+"?";
+ shuffle([correct,...shuffle(words.filter(x=>x!==w)).slice(0,2).map(x=>reverse?x[0]:x[1])]).forEach(a=>{
+  const b=document.createElement("button");b.className="secondary";b.textContent=a;
+  b.onclick=()=>{if(challengeDone)return;challengeDone=true;opts.querySelectorAll("button").forEach(x=>x.disabled=true);
+   if(a===correct){score+=5;document.getElementById("score").textContent=score;document.getElementById("challengeMessage").textContent="בונוס! +5 נקודות 🎉";profile.correct++;if(!profile.known.includes(w[0]))profile.known.push(w[0]);}
+   else document.getElementById("challengeMessage").textContent="לא נורא, ממשיכים להתאמן 💪";
+   saveProfile();document.getElementById("next").style.display="block";document.getElementById("next").textContent=index===deck.length-1?"לתוצאות 🏆":"לשאלה הבאה ←";
+  };opts.appendChild(b)
+ });
+}
+function nextQuestion(){
+ if(!locked)return;
+ if(!challengeDone){document.getElementById("challengeMessage").textContent="בחרו תשובת בונוס לפני שממשיכים.";return}
+ index++;
+ if(index<deck.length)showQuestion();
+ else finishRound()
+}
+function finishRound(){
+ document.getElementById("word").style.display="none";document.getElementById("answers").style.display="none";
+ document.getElementById("message").style.display="none";document.getElementById("challengeBox").style.display="none";document.getElementById("next").style.display="none";
+ document.getElementById("finish").style.display="block";profile.rounds++;profile.best=Math.max(profile.best,score);
+ document.getElementById("final").textContent=`${profile.nickname}, צברת ${score} נקודות בסיבוב!`;
+ document.getElementById("roundTip").textContent=score>=100?"מדהים! סיבוב מושלם! 🏆":score>=70?"כל הכבוד! עוד קצת תרגול ואת/ה שם! 🌟":"כל סיבוב מלמד משהו. נסו שוב כדי לשפר את השיא! 💪";
+ saveProfile()
+}
+function readiness(){
+ const coverage=profile.known.length/words.length;
+ const accuracy=profile.attempts?profile.correct/profile.attempts:0;
+ const rounds=Math.min(profile.rounds/5,1);
+ return Math.min(100,Math.round(coverage*65+accuracy*25+rounds*10));
+}
+function updateStats(){
+ const r=readiness();document.getElementById("readinessNum").textContent=r+"%";
+ document.getElementById("readinessBar").style.width=r+"%";
+ document.getElementById("readinessText").textContent=r>=90?"כמעט מוכנים! המשיכו בחזרה קצרה 🎉":r>=70?"מתקדמים מצוין — חזקו את המילים הקשות 💪":r>=40?"יש התקדמות! עוד כמה סיבובים 🌱":"מתחילים את הדרך ל־100%!";
+ document.getElementById("rounds").textContent=profile.rounds;document.getElementById("best").textContent=profile.best;
+ document.getElementById("known").textContent=profile.known.length;
+}
+function showWeakWords(){
+ const missing=words.filter(w=>!profile.known.includes(w[0]));
+ document.getElementById("list").innerHTML="<b>מילים לתרגול נוסף:</b><br>"+(missing.length?missing.map(w=>`${w[0]} = ${w[1]}`).join("<br>"):"כל הכבוד! עניתם נכון על כל המילים לפחות פעם אחת 🎉");
+ document.querySelector(".card:last-of-type")?.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function resetProgress(){
+ if(!confirm("לאפס את כל ההתקדמות של הכינוי במכשיר הזה?"))return;
+ const nickname=profile.nickname;profile={nickname,best:0,rounds:0,known:[],attempts:0,correct:0};saveProfile();start()
+}
+document.getElementById("list").innerHTML=words.map(w=>`${w[0]} = ${w[1]}`).join("<br>");
+loadProfile();start();
+</script>
+</body>
+</html>
