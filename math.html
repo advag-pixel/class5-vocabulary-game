@@ -660,7 +660,7 @@ function padKey(c){if(!ST||ST.done)return;
   else if(c==='✓'){return padCheck();}
   else if(padBuf.length<7)padBuf+=c;
   $('padv').textContent=padBuf;
-  const s=ST.g.st[ST.i];if(s&&c!=='⌫'&&String(s.a).length===1&&padBuf.length===1)padCheck();}
+}
 function padCheck(){if(padBuf==='')return;const s=ST.g.st[ST.i];
   if(+padBuf===s.a){ST.ans.push(s.a);snd1();ST.smist=0;$('hint').classList.add('hide');ST.i++;
     if(ST.i>=ST.g.st.length)return endInter();renderInter();say(pick(['נכון, ממשיכים!','יפה!','מצוין ✔️']),'hop');}
