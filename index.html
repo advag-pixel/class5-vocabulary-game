@@ -15,14 +15,14 @@ button,input{font:inherit}button{border:0;border-radius:12px;padding:11px 14px;m
 .primary{background:var(--purple);color:white}.secondary{background:#eee9ff;color:#493a9c}.answer{border:2px solid #e9e3fa;background:white;min-height:55px;font-size:17px}.answer.correct{background:var(--mint);border-color:#50bd8e}.answer.wrong{background:var(--pink);border-color:#e8a0ae}
 #answers,#bonusAnswers{display:grid;grid-template-columns:1fr 1fr;gap:8px}.word{font-size:clamp(29px,6vw,44px);font-weight:bold;text-align:center;margin:22px 0;direction:ltr}
 #message,#hintText,#bonusMessage{font-size:17px;font-weight:bold;line-height:1.55;min-height:24px}#message.good{color:#14834e}#message.try{color:#9c3850}
-.teacherArea{display:flex;align-items:center;justify-content:center;gap:15px;margin:10px auto 15px;min-height:150px}.teacher{width:112px;height:138px;flex:0 0 auto;overflow:visible}.teacher .body{fill:#6d5bd0}.teacher .hair{fill:#633b2d}.teacher .skin{fill:#ffd1ad}.teacher .shirt{fill:#ffcb66}.teacher .eye{fill:#30254c}.teacher .mouth{fill:none;stroke:#9b4c49;stroke-width:2.5;stroke-linecap:round}.teacher .arm{fill:none;stroke:#ffd1ad;stroke-width:10;stroke-linecap:round}.teacher.jump{animation:jump .65s ease-in-out 2}.teacher.sad{animation:nod .45s ease-in-out}.teacher.dance{animation:dance .6s ease-in-out 3}
+.teacherArea{display:flex;align-items:center;justify-content:center;gap:15px;margin:10px auto 15px;min-height:150px}.teacher{width:112px;height:138px;flex:0 0 auto;overflow:visible}.teacher .body{fill:#6d5bd0}.teacher .hair{fill:#633b2d}.teacher .skin{fill:#ffd1ad}.teacher .shirt{fill:#ffcb66}.teacher .eye{fill:#30254c}.teacher .mouth{fill:none;stroke:#9b4c49;stroke-width:2.5;stroke-linecap:round}.teacher .arm{fill:none;stroke:#ffd1ad;stroke-width:10;stroke-linecap:round}.teacher.jump{transform-origin:50% 100%;animation:jump .72s cubic-bezier(.3,.05,.45,1.35) 3}.teacher.sad{transform-origin:50% 15%;animation:nod .5s ease-in-out 2}.teacher.dance{transform-origin:50% 70%;animation:dance .48s ease-in-out 5}.teacher.celebrate{transform-origin:50% 70%;animation:megaCelebrate .55s cubic-bezier(.2,1.5,.4,1) 4}
 .speech{background:#fff;border:2px solid #e5defc;border-radius:17px;padding:12px 14px;max-width:330px;font-weight:bold;box-shadow:0 4px 14px #392b6610}.speech small{display:block;color:#7c70a5;font-weight:normal;margin-top:5px}
 #speakBtn{animation:listenPulse 1.15s ease-in-out infinite;box-shadow:0 0 0 0 #9c6be866;position:relative}
 #speakBtn:before{content:"⬅️";margin-inline-end:8px;animation:arrowNudge .8s ease-in-out infinite;display:inline-block}
 @keyframes listenPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 #9c6be855}50%{transform:scale(1.055);box-shadow:0 0 0 8px #9c6be800}}
 @keyframes arrowNudge{0%,100%{translate:0 0}50%{translate:-5px 0}}
 
-@keyframes jump{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-19px) rotate(-7deg)}70%{transform:translateY(-5px) rotate(7deg)}}@keyframes nod{0%,100%{transform:rotate(0)}40%{transform:rotate(-7deg)}70%{transform:rotate(5deg)}}@keyframes dance{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-12deg) scale(1.05)}75%{transform:rotate(12deg) scale(1.05)}}
+@keyframes jump{0%,100%{transform:translateY(0) rotate(0) scale(1)}20%{transform:translateY(-25px) rotate(-10deg) scale(1.06)}45%{transform:translateY(-44px) rotate(8deg) scale(1.1)}65%{transform:translateY(-16px) rotate(-7deg) scale(1.04)}82%{transform:translateY(-30px) rotate(5deg) scale(1.08)}}@keyframes nod{0%,100%{transform:rotate(0) translateY(0)}25%{transform:rotate(-9deg) translateY(2px)}50%{transform:rotate(8deg) translateY(-2px)}75%{transform:rotate(-5deg) translateY(1px)}}@keyframes dance{0%,100%{transform:rotate(0) scale(1) translateY(0)}20%{transform:rotate(-18deg) scale(1.08) translateY(-7px)}45%{transform:rotate(18deg) scale(1.12) translateY(-15px)}70%{transform:rotate(-15deg) scale(1.08) translateY(-6px)}85%{transform:rotate(12deg) scale(1.1) translateY(-12px)}}@keyframes megaCelebrate{0%,100%{transform:translateY(0) rotate(0) scale(1)}20%{transform:translateY(-28px) rotate(-18deg) scale(1.14)}40%{transform:translateY(-46px) rotate(16deg) scale(1.2)}60%{transform:translateY(-18px) rotate(-14deg) scale(1.1)}80%{transform:translateY(-34px) rotate(12deg) scale(1.16)}}
 .spark{position:fixed;pointer-events:none;font-size:24px;z-index:20;animation:burst 1.1s ease-out forwards}@keyframes burst{0%{opacity:0;transform:translateY(10px) scale(.4)}20%{opacity:1}100%{opacity:0;transform:translateY(-100px) rotate(35deg) scale(1.5)}}
 .track{height:13px;background:#e9e4f7;border-radius:20px;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,#51c9a0,#7864df);transition:width .3s}
 #bonusBox{background:#f8f5ff;border-radius:16px;padding:15px;margin-top:18px}#bonusBox h3{margin:0 0 8px}.hide{display:none!important}.statline{margin:12px 0}.statline b{float:left}.end{text-align:center}#endScreen{display:none}#weakWords{line-height:1.9}.modal{position:fixed;inset:0;background:#201744b8;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(5px)}
@@ -181,7 +181,7 @@ function choose(btn,answer){
   if(mistakes===0)profile.firstTry++;
   streak++;$("score").textContent=score;$("streak").textContent=streak;
   say(streak>=3?"Amazing! נכון מאוד! 🎉":"Fantastic! כל הכבוד! ⭐","good");
-  celebrate(streak>=3);$("teacher").className="teacher "+(streak>=3?"dance":"jump");
+  celebrate(streak>=3);$("teacher").className="teacher "+(streak>=3?"celebrate":"jump");
   $("teacherSpeech").innerHTML=(streak>=3?"You're on fire! את/ה אלוף/ה! 🔥":"Amazing! ידעתי שתצליח/י! 🎉")+"<small>Your English teacher is proud of you! המורה לאנגלית גאה בך!</small>";
   if(streak===3||streak===5||streak===10){score+=5;profile.medals++;$("score").textContent=score;say("🏅 רצף "+streak+"! בונוס 5 נקודות!","good");}
   $("hintBtn").classList.add("hide");$("speakBtn").classList.add("hide");$("revealBtn").classList.add("hide");
@@ -317,7 +317,7 @@ function startBonus(){
            $("bonusMessage").textContent="🎉 נכון! The teacher spins the letters! +10 נקודות";
            $("bonusMessage").style.background="#d9f8e8";
            $("bonusBlanks").animate([{transform:"rotate(0deg) scale(1)"},{transform:"rotate(360deg) scale(1.18)"},{transform:"rotate(720deg) scale(1)"}],{duration:900,easing:"ease-out"});
-           $("teacher").className="teacher dance";$("teacherSpeech").innerHTML="Fantastic!<small>המורה לאנגלית רוקדת משמחה! 🎉</small>";celebrate(true);
+           $("teacher").className="teacher celebrate";$("teacherSpeech").innerHTML="Fantastic!<small>המורה לאנגלית רוקדת משמחה! 🎉</small>";celebrate(true);
            profile.known=Array.from(new Set([...profile.known,bonusWord[0]]));save();
            $("closeBonusBtn").classList.remove("hide");$("spinAgainBtn").classList.add("hide");
          }else{
