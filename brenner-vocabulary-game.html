@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>אתגר אוצר המילים | כיתה ה׳ — ברנר</title>
+<title>אתגר אוצר המילים | כיתה ה׳3 — ברנר</title>
 <style>
 :root{--ink:#242044;--purple:#6254d9;--pale:#f0edff;--mint:#c9f7df;--pink:#ffe0e7;--gold:#ffe7a8;--white:#fff}
 *{box-sizing:border-box}
@@ -29,6 +29,15 @@ button:disabled{opacity:.65;cursor:default;transform:none}
 .side{position:sticky;top:12px}
 .side .card{margin-top:12px}
 #word{font-size:clamp(30px,6vw,44px);font-weight:800;margin:22px 0}
+.helperButtons{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.hintText{min-height:24px;font-weight:700;color:#5d4acb;margin:8px 0}
+#partyFx{pointer-events:none;position:relative;height:0}
+.fxPop{position:absolute;left:50%;top:-130px;font-size:34px;animation:popFly .9s ease-out forwards}
+@keyframes popFly{0%{opacity:0;transform:translate(-50%,15px) scale(.5)}20%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--drift)), -85px) rotate(25deg) scale(1.25)}}
+.card.goodPulse{animation:goodPulse .45s ease}
+.card.tryPulse{animation:tryPulse .35s ease}
+@keyframes goodPulse{50%{box-shadow:0 0 0 5px #b8f2d0,0 8px 24px #312a6310}}
+@keyframes tryPulse{50%{box-shadow:0 0 0 4px #ffd3dc,0 8px 24px #312a6310}}
 #answers{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .answer{background:#f1efff;color:#29234f;min-height:60px;margin:0;font-size:17px}
 .answer.correct{background:var(--mint)}
@@ -51,7 +60,7 @@ footer{text-align:center;color:#777;font-size:12px;margin:20px}
 <header>
   <div>
     <h1>🎮 אתגר אוצר המילים</h1>
-    <p class="subtitle">כיתה ה׳ · בית ספר ברנר · מתכוננים למבחן ב־29/10</p>
+    <p class="subtitle">כיתה ה׳3 · בית ספר ברנר · מתכוננים למבחן ב־29/10</p>
   </div>
   <span class="pill">🌟 לומדים ומשתפרים</span>
 </header>
@@ -66,19 +75,24 @@ footer{text-align:center;color:#777;font-size:12px;margin:20px}
   </div>
 
   <div class="card">
-    <div class="topline"><b>בחרו מצב משחק</b><span class="pill">10 שאלות בסיבוב</span></div>
-    <button class="mode" onclick="setMode('en')">🇬🇧 אנגלית ← עברית</button>
-    <button class="mode" onclick="setMode('he')">🇮🇱 עברית ← אנגלית</button>
-    <button class="mode" onclick="setMode('mix')">🎲 מצב מעורב</button>
+    <div class="topline"><b>🎲 המשחק המעורב</b><span class="pill">10 שאלות בסיבוב</span></div>
+    בכל סיבוב הכיוונים מתחלפים אוטומטית: לפעמים רואים מילה באנגלית ובוחרים בעברית, ולפעמים להפך. ויש גם אתגר בונוס בכל שאלה!
   </div>
 
   <div class="card" id="game">
     <div class="topline">
       <span class="pill">⭐ ניקוד: <b id="score">0</b></span>
+      <span class="pill">🔥 רצף: <b id="currentStreak">0</b></span>
       <span class="pill" id="progress">שאלה 1 מתוך 10</span>
     </div>
     <div id="word">guitar</div>
+    <div class="helperButtons">
+      <button class="secondary" onclick="giveHint()">💡 רמז</button>
+      <button class="secondary" onclick="speakWord()">🔊 השמיעו את המילה</button>
+    </div>
+    <p id="hintText" class="hintText" aria-live="polite"></p>
     <div id="answers"></div>
+    <div id="partyFx" aria-hidden="true"></div>
     <p id="message" aria-live="polite"></p>
     <div id="challengeBox" style="display:none">
       <h3 id="challengeTitle">⚡ אתגר בונוס!</h3>
@@ -113,7 +127,9 @@ footer{text-align:center;color:#777;font-size:12px;margin:20px}
   <div class="card">
     <b>📈 ההתקדמות שלך</b>
     <p>סיבובים שהושלמו: <b id="rounds">0</b></p>
-    <p>שיא ניקוד: <b id="best">0</b>/100</p>
+    <p>שיא ניקוד: <b id="best">0</b>/150</p>
+    <p>🔥 רצף תשובות נכון: <b id="streak">0</b></p>
+    <p>🏅 מדליות: <b id="medals">0</b></p>
     <p>מילים שענית עליהן נכון: <b id="known">0</b>/51</p>
     <button class="secondary" onclick="resetProgress()">איפוס ההתקדמות</button>
     <p class="small">האיפוס מוחק את ההתקדמות המקומית של הכינוי במכשיר הזה.</p>
@@ -124,7 +140,7 @@ footer{text-align:center;color:#777;font-size:12px;margin:20px}
   </div>
 </aside>
 </div>
-<footer>משחק תרגול לימודי · כיתה ה׳ · ברנר</footer>
+<footer>משחק תרגול לימודי · כיתה ה׳3 · ברנר</footer>
 </main>
 
 <script>
@@ -141,7 +157,7 @@ const words=[
 ["school","בית ספר"],["art","אמנות"],["food","אוכל"],["sport","ספורט"],["lesson","שיעור"]
 ];
 const STORE="brenner_vocab_v1";
-let mode="mix",deck=[],index=0,score=0,locked=false,challengeDone=false,profile={nickname:"",best:0,rounds:0,known:[],attempts:0,correct:0};
+let mode="mix",deck=[],index=0,score=0,locked=false,challengeDone=false,currentStreak=0,roundMedals=0,profile={nickname:"",best:0,rounds:0,known:[],attempts:0,correct:0,medals:0};
 function shuffle(a){return a.slice().sort(()=>Math.random()-.5)}
 function loadProfile(){
  try{const p=JSON.parse(localStorage.getItem(STORE)||"{}");if(p&&typeof p==="object")profile={...profile,...p};}catch(e){}
@@ -150,12 +166,14 @@ function loadProfile(){
 }
 function saveProfile(){localStorage.setItem(STORE,JSON.stringify(profile));updateStats()}
 function saveNickname(){profile.nickname=document.getElementById("nickname").value.trim().slice(0,24)||"שחקן/ית";saveProfile();start()}
-function setMode(m){mode=m;start()}
+function setMode(m){mode="mix";start()}
 function start(){
  if(!profile.nickname){profile.nickname=document.getElementById("nickname").value.trim()||"שחקן/ית";document.getElementById("nickname").value=profile.nickname;saveProfile()}
- deck=shuffle(words).slice(0,10);index=0;score=0;locked=false;challengeDone=false;
+ deck=shuffle(words).slice(0,10);index=0;score=0;locked=false;challengeDone=false;currentStreak=0;roundMedals=0;
+ document.getElementById("currentStreak").textContent="0";
  document.getElementById("score").textContent="0";document.getElementById("finish").style.display="none";
  document.getElementById("word").style.display="block";document.getElementById("answers").style.display="grid";
+ document.getElementById("hintText").textContent="";
  document.getElementById("message").style.display="block";document.getElementById("challengeBox").style.display="none";
  document.getElementById("next").style.display="none";showQuestion()
 }
@@ -164,6 +182,7 @@ function showQuestion(){
  const w=deck[index];const reverse=mode==="he"||(mode==="mix"&&Math.random()<.5);
  const question=reverse?w[1]:w[0],correct=reverse?w[0]:w[1];
  document.getElementById("word").textContent=question;
+ document.getElementById("hintText").textContent="";
  document.getElementById("progress").textContent=`שאלה ${index+1} מתוך ${deck.length}`;
  document.getElementById("message").textContent="";document.getElementById("next").style.display="none";
  const wrong=shuffle(words.filter(x=>x!==w)).slice(0,3).map(x=>reverse?x[0]:x[1]);
@@ -177,15 +196,18 @@ function choose(button,answer,correct,englishWord){
  if(locked)return;locked=true;profile.attempts++;
  document.querySelectorAll(".answer").forEach(b=>b.disabled=true);
  if(answer===correct){
-  score+=10;profile.correct++;if(!profile.known.includes(englishWord))profile.known.push(englishWord);
-  button.classList.add("correct");document.getElementById("message").textContent="נכון מאוד! ⭐ +10 נקודות";
-  document.getElementById("message").style.color="#18864b";
+  score+=10;profile.correct++;currentStreak++;if(!profile.known.includes(englishWord))profile.known.push(englishWord);
+  if(currentStreak===3||currentStreak===5||currentStreak===10){score+=5;roundMedals++;profile.medals++;document.getElementById("message").textContent=`רצף של ${currentStreak}! ⭐ +15 נקודות ומדליית בונוס!`;playFx("win");}
+  else {document.getElementById("message").textContent="נכון מאוד! ⭐ +10 נקודות";playFx("good");}
+  button.classList.add("correct");document.getElementById("message").style.color="#18864b";
  }else{
+  currentStreak=0;document.getElementById("currentStreak").textContent="0";
   button.classList.add("wrong");document.querySelectorAll(".answer").forEach(b=>{if(b.textContent===correct)b.classList.add("correct")});
-  document.getElementById("message").textContent="כמעט! התשובה הנכונה: "+correct;
+  document.getElementById("message").textContent="כמעט! התשובה הנכונה: "+correct+" — מתחילים רצף חדש 💪";
   document.getElementById("message").style.color="#b52e48";
+  playFx("try");
  }
- document.getElementById("score").textContent=score;saveProfile();showChallenge();
+ document.getElementById("score").textContent=score;document.getElementById("currentStreak").textContent=currentStreak;saveProfile();showChallenge();
 }
 function showChallenge(){
  const box=document.getElementById("challengeBox"),opts=document.getElementById("challengeOptions");
@@ -196,13 +218,65 @@ function showChallenge(){
  shuffle([correct,...shuffle(words.filter(x=>x!==w)).slice(0,2).map(x=>reverse?x[0]:x[1])]).forEach(a=>{
   const b=document.createElement("button");b.className="secondary";b.textContent=a;
   b.onclick=()=>{if(challengeDone)return;challengeDone=true;opts.querySelectorAll("button").forEach(x=>x.disabled=true);
-   if(a===correct){score+=5;document.getElementById("score").textContent=score;document.getElementById("challengeMessage").textContent="בונוס! +5 נקודות 🎉";profile.correct++;if(!profile.known.includes(w[0]))profile.known.push(w[0]);}
-   else document.getElementById("challengeMessage").textContent="לא נורא, ממשיכים להתאמן 💪";
+   if(a===correct){score+=5;document.getElementById("score").textContent=score;document.getElementById("challengeMessage").textContent="בונוס! +5 נקודות 🎉";profile.correct++;if(!profile.known.includes(w[0]))profile.known.push(w[0]);playFx("good");}
+   else {currentStreak=0;document.getElementById("currentStreak").textContent="0";document.getElementById("challengeMessage").textContent="לא נורא, ממשיכים להתאמן 💪";playFx("try");}
    saveProfile();document.getElementById("next").style.display="block";document.getElementById("next").textContent=index===deck.length-1?"לתוצאות 🏆":"לשאלה הבאה ←";
   };opts.appendChild(b)
  });
 }
-function nextQuestion(){
+
+function giveHint(){
+ const w=deck[index];if(!w)return;
+ const shown=document.getElementById("word").textContent;
+ const isEnglish=shown===w[0];
+ const answer=isEnglish?w[1]:w[0];
+ const first=Array.from(answer)[0]||"";
+ const length=Array.from(answer).length;
+ document.getElementById("hintText").textContent=`💡 רמז: התשובה מתחילה ב־"${first}" ויש בה ${length} תווים.`;
+ playFx("hint");
+}
+function speakWord(){
+ const w=deck[index];if(!w)return;
+ const shown=document.getElementById("word").textContent;
+ const text=words.some(x=>x[0]===shown)?shown:w[0];
+ if(!("speechSynthesis" in window)){
+  document.getElementById("hintText").textContent="הדפדפן הזה לא תומך בהקראה. אפשר לנסות Chrome או Safari.";
+  return;
+ }
+ window.speechSynthesis.cancel();
+ const utterance=new SpeechSynthesisUtterance(text);
+ utterance.lang="en-US";utterance.rate=0.82;utterance.pitch=1.05;
+ window.speechSynthesis.speak(utterance);
+ document.getElementById("hintText").textContent="🔊 מקשיבים להגייה באנגלית…";
+}
+function playFx(kind){
+ const card=document.getElementById("game");
+ card.classList.remove("goodPulse","tryPulse");
+ void card.offsetWidth;
+ card.classList.add(kind==="good"?"goodPulse":kind==="try"?"tryPulse":"goodPulse");
+ const fx=document.getElementById("partyFx");
+ if(kind==="good"||kind==="hint"){
+  const emojis=kind==="good"?["🎉","⭐","✨","🏆","🎊"]:kind==="win"?["🏆","🥇","🎉","🌟","🎊"]:["💡","✨"];
+  for(let i=0;i<(kind==="good"?7:kind==="win"?16:2);i++){
+   const el=document.createElement("span");el.className="fxPop";el.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+   el.style.setProperty("--drift",`${Math.round(Math.random()*180-90)}px`);
+   el.style.left=`${35+Math.random()*30}%`;fx.appendChild(el);setTimeout(()=>el.remove(),950);
+  }
+ }
+ try{
+  const AudioCtx=window.AudioContext||window.webkitAudioContext;
+  if(AudioCtx){
+   const ctx=new AudioCtx(),osc=ctx.createOscillator(),gain=ctx.createGain();
+   osc.connect(gain);gain.connect(ctx.destination);
+   osc.type="sine";osc.frequency.value=kind==="win"?1046:kind==="good"?880:kind==="hint"?660:220;
+   gain.gain.setValueAtTime(0.07,ctx.currentTime);
+   gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.16);
+   osc.start();osc.stop(ctx.currentTime+0.16);
+   osc.onended=()=>ctx.close();
+  }
+ }catch(e){}
+}
+\nfunction nextQuestion(){
  if(!locked)return;
  if(!challengeDone){document.getElementById("challengeMessage").textContent="בחרו תשובת בונוס לפני שממשיכים.";return}
  index++;
@@ -214,7 +288,8 @@ function finishRound(){
  document.getElementById("message").style.display="none";document.getElementById("challengeBox").style.display="none";document.getElementById("next").style.display="none";
  document.getElementById("finish").style.display="block";profile.rounds++;profile.best=Math.max(profile.best,score);
  document.getElementById("final").textContent=`${profile.nickname}, צברת ${score} נקודות בסיבוב!`;
- document.getElementById("roundTip").textContent=score>=100?"מדהים! סיבוב מושלם! 🏆":score>=70?"כל הכבוד! עוד קצת תרגול ואת/ה שם! 🌟":"כל סיבוב מלמד משהו. נסו שוב כדי לשפר את השיא! 💪";
+ document.getElementById("roundTip").textContent=score>=120?"מדהים! סיבוב אגדי! 🏆":score>=80?"כל הכבוד! עוד קצת תרגול ואת/ה שם! 🌟":"כל סיבוב מלמד משהו. נסו שוב כדי לשפר את השיא! 💪";
+ if(score>=120){profile.medals++;roundMedals++;playFx("win")}
  saveProfile()
 }
 function readiness(){
@@ -229,6 +304,7 @@ function updateStats(){
  document.getElementById("readinessText").textContent=r>=90?"כמעט מוכנים! המשיכו בחזרה קצרה 🎉":r>=70?"מתקדמים מצוין — חזקו את המילים הקשות 💪":r>=40?"יש התקדמות! עוד כמה סיבובים 🌱":"מתחילים את הדרך ל־100%!";
  document.getElementById("rounds").textContent=profile.rounds;document.getElementById("best").textContent=profile.best;
  document.getElementById("known").textContent=profile.known.length;
+ document.getElementById("streak").textContent=currentStreak||0;document.getElementById("medals").textContent=profile.medals||0;
 }
 function showWeakWords(){
  const missing=words.filter(w=>!profile.known.includes(w[0]));
