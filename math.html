@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>משחק חשבון וגאומטריה – מתכוננים למבחן</title>
+<style>
+:root{--bg:#eef4ff;--card:#fff;--ink:#1f2a44;--pri:#3b6cf6;--ok:#22a559;--bad:#e5484d;--warn:#f5a524;--mut:#6b7794}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",Arial,"Noto Sans Hebrew",sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+.wrap{max-width:640px;margin:0 auto;padding:12px}
+h1{font-size:22px;margin:6px 0;text-align:center}
+.card{background:var(--card);border-radius:18px;padding:16px;box-shadow:0 4px 16px rgba(30,50,110,.10);margin-bottom:12px}
+.hide{display:none!important}
+input.nick{width:100%;font-size:20px;padding:12px;border:2px solid #c9d5f5;border-radius:12px;text-align:center}
+input.nick.err{border-color:var(--bad)}
+.btn{display:block;width:100%;border:0;border-radius:14px;padding:14px;font-size:20px;font-weight:700;background:var(--pri);color:#fff;cursor:pointer}
+.btn.sec{background:#e3eaff;color:var(--pri)}
+.btn:active{transform:scale(.98)}
+.bar{height:14px;border-radius:9px;background:#e3eaff;overflow:hidden}
+.bar>b{display:block;height:100%;background:linear-gradient(90deg,#3b6cf6,#22a559);border-radius:9px;transition:width .5s}
+.big{font-size:44px;font-weight:800;text-align:center;color:var(--pri)}
+.sub{color:var(--mut);text-align:center;font-size:14px}
+.grp{font-weight:700;margin:12px 0 6px;color:var(--pri)}
+.tp{display:flex;align-items:center;gap:8px;padding:8px;border-radius:12px;background:#f5f8ff;margin-bottom:6px;cursor:pointer}
+.tp .bar{flex:1;height:10px}
+.tp span.n{flex:0 0 130px;font-size:15px}
+.tp span.p{flex:0 0 38px;font-size:13px;color:var(--mut);text-align:left}
+.top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.top .bar{flex:1}
+.mini{font-size:14px;font-weight:700;color:var(--mut)}
+.ibtn{border:0;background:#e3eaff;border-radius:10px;font-size:18px;padding:6px 10px;cursor:pointer}
+.tch{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+.face{font-size:44px;width:64px;height:64px;border-radius:50%;background:#fff3d6;display:flex;align-items:center;justify-content:center;flex:0 0 64px}
+.face.hop{animation:hop .5s}
+.face.shake{animation:shake .4s}
+@keyframes hop{0%,100%{transform:translateY(0)}40%{transform:translateY(-14px) rotate(-6deg)}70%{transform:translateY(-4px) rotate(6deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.bub{background:#fff3d6;border-radius:14px;padding:8px 12px;font-size:16px;flex:1;min-height:42px;display:flex;align-items:center}
+.q{font-size:21px;font-weight:700;line-height:1.6;text-align:center;margin:6px 0}
+.vis{text-align:center;margin:6px 0}
+.vis svg{max-width:100%;height:auto}
+pre.vert{direction:ltr;display:inline-block;text-align:right;font:700 26px/1.25 "Courier New",monospace;background:#f5f8ff;border-radius:12px;padding:10px 18px;margin:6px 0}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.opt{border:2px solid #c9d5f5;background:#fff;border-radius:14px;padding:14px 6px;font-size:21px;font-weight:700;color:var(--ink);cursor:pointer;min-height:58px}
+.opt.ok{background:#d9f5e3;border-color:var(--ok);color:#0e6b33}
+.opt.bad{background:#ffe0e1;border-color:var(--bad);color:#a3191e}
+.opt.dim{opacity:.55}
+.hint,.expl{margin-top:10px;border-radius:12px;padding:10px 12px;font-size:16px;line-height:1.6}
+.hint{background:#fff3d6}.expl{background:#e8f0ff}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 3px;line-height:1.15;font-weight:800}
+.fr i{font-style:normal;padding:0 5px}.fr i:first-child{border-bottom:2px solid currentColor}
+.mx{font-size:1.3em;margin-inline:2px;font-weight:800}
+.lt{direction:ltr;display:inline-block}
+.res li{margin:4px 0}
+.toast{position:fixed;left:50%;top:18%;transform:translateX(-50%);background:#fff;border:3px solid var(--warn);border-radius:18px;padding:12px 22px;font-size:22px;font-weight:800;z-index:9;box-shadow:0 8px 30px rgba(0,0,0,.25);animation:pop 1.6s forwards}
+@keyframes pop{0%{opacity:0;transform:translateX(-50%) scale(.5)}15%{opacity:1;transform:translateX(-50%) scale(1.1)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-30px)}}
+.warn{background:#fff3d6;border-radius:10px;padding:8px;font-size:13px;margin-top:8px}
+.padv{direction:ltr;text-align:center;font:800 32px "Courier New",monospace;min-height:48px;border:3px solid var(--pri);border-radius:12px;background:#fff;margin:6px 0;padding:4px}
+.pad{direction:ltr;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.pk{font-size:26px;font-weight:800;padding:12px 0;border:2px solid #c9d5f5;background:#fff;border-radius:12px;cursor:pointer}.pk.go{background:var(--ok);color:#fff;border-color:var(--ok)}.pk:active{background:#e3eaff}
+#cv{width:100%;max-width:320px;height:auto;border:2px dashed #c9d5f5;border-radius:12px;background:#fffef6;touch-action:none;display:block;margin:6px auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🧮 חשבון וגאומטריה – מתכוננים למבחן 18.11</h1>
+
+<div id="sStart">
+ <div class="card">
+  <div class="tch"><div class="face">👩‍🏫</div><div class="bub">היי! אני המורה. כתבו כינוי ובואו נתאמן – כל תרגיל מסביר לכם גם אם טעיתם 💪</div></div>
+  <input id="nick" class="nick" maxlength="14" placeholder="כינוי (חובה)" autocomplete="off">
+  <div style="height:10px"></div>
+  <div class="big" id="pctBig">0%</div>
+  <div class="sub">מוכנות למבחן</div>
+  <div class="bar" style="margin:8px 0"><b id="pctBar" style="width:0"></b></div>
+  <div class="sub" id="eta"></div>
+  <div style="height:10px"></div>
+  <button class="btn" id="goMix">▶ משחק מעורב (14 שאלות)</button>
+  <div id="storeWarn" class="warn hide">⚠️ הדפדפן לא שומר התקדמות (מצב גלישה פרטי?). פתחו בדפדפן רגיל כדי שההתקדמות תישמר.</div>
+ </div>
+ <div class="card"><div class="sub" style="margin-bottom:6px">או תרגול נושא ספציפי – לחצו על נושא:</div><div id="topics"></div>
+  <button class="btn sec" id="resetBtn" style="margin-top:10px;font-size:14px;padding:8px">איפוס התקדמות</button></div>
+</div>
+
+<div id="sGame" class="hide">
+ <div class="top"><span class="mini" id="qn"></span><div class="bar"><b id="rbar" style="width:0"></b></div><span class="mini" id="pctSm"></span><button class="ibtn" id="mute">🔊</button><button class="ibtn" id="skip" title="דלג">⏭ דלג</button><button class="ibtn" id="quit">✖</button></div>
+ <div class="card">
+  <div class="tch"><div class="face" id="face">👩‍🏫</div><div class="bub" id="bub"></div></div>
+  <div class="q" id="qt"></div>
+  <div class="vis" id="qv"></div>
+  <div class="opts" id="opts"></div>
+  <div id="pad" class="hide"><div class="padv" id="padv"></div><div class="pad"></div></div>
+  <div style="margin-top:10px;display:flex;gap:8px"><button class="btn sec" id="hBtn" style="font-size:15px;padding:8px">💡 עזרה</button><button class="btn sec" id="dBtn" style="font-size:15px;padding:8px">✏️ טיוטה</button></div>
+  <div id="draft" class="hide"><canvas id="cv" width="320" height="180"></canvas><button class="btn sec" id="dClr" style="font-size:14px;padding:6px">🧽 נקה</button></div>
+
+  <div class="hint hide" id="hint"></div>
+  <div class="expl hide" id="expl"></div>
+  <button class="btn hide" id="next" style="margin-top:12px">המשך ←</button>
+ </div>
+</div>
+
+<div id="sRes" class="hide">
+ <div class="card res">
+  <div class="tch"><div class="face hop">🎉</div><div class="bub" id="resMsg"></div></div>
+  <div class="big" id="resScore"></div>
+  <div class="sub" id="resSub"></div>
+  <div class="bar" style="margin:10px 0"><b id="resBar" style="width:0"></b></div>
+  <div id="resList"></div>
+  <div style="height:10px"></div>
+  <button class="btn" id="again">שחקו שוב</button>
+  <div style="height:8px"></div>
+  <button class="btn sec" id="home">לתפריט</button>
+ </div>
+</div>
+</div>
+<script>
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[R(0,a.length-1)];
+const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=R(0,i);[a[i],a[j]]=[a[j],a[i]];}return a;};
+const nf=n=>Number(n).toLocaleString('en-US');
+const fr=(a,b)=>`<span class="fr"><i>${a}</i><i>${b}</i></span>`;
+const mixed=(w,a,b)=>`<span class="mx">${w}</span>${fr(a,b)}`;
+const LT=s=>`<span class="lt">${s}</span>`;
+const pol=(cx,cy,r,d)=>[cx+r*Math.cos(d*Math.PI/180),cy-r*Math.sin(d*Math.PI/180)];
+const P=(a)=>a.map(v=>v.toFixed(1)).join(',');
+function Q(t,ans,wr,h,e,v){
+  ans=String(ans);const o=[ans];
+  for(let w of wr){w=String(w);if(!o.includes(w))o.push(w);if(o.length>=4)break;}
+  const so=sh(o);return {t,v:v||'',o:so,a:so.indexOf(ans),h,e};
+}
+function nums(ans,c,step,f=nf){
+  const s=new Set(),out=[];
+  for(const x of c){if(Number.isFinite(x)&&x>0&&x!==ans&&!s.has(x)){s.add(x);out.push(x);}}
+  const head=out.slice(0,2),rest=sh(out.slice(2));let g=0;
+  const res=head.concat(rest);
+  while(res.length<3&&g++<80){const x=ans+step*R(-9,9);if(x>0&&x!==ans&&!res.includes(x))res.push(x);}
+  return res.slice(0,3).map(f);
+}
+function vert(a,op,b){const A=String(a),B=String(b),w=Math.max(A.length,B.length)+2;
+  return `<pre class="vert">${A.padStart(w)}\n${op+B.padStart(w-1)}\n${'─'.repeat(w)}</pre>`;}
+const G={};
+G.place=()=>{
+  const len=R(5,7),ds=sh([1,2,3,4,5,6,7,8,9]).slice(0,len),num=+ds.join('');
+  const i=R(0,len-1),d=ds[i],p=len-1-i;
+  const names=['אחדות','עשרות','מאות','אלפים','עשרות אלפים','מאות אלפים','מיליונים'];
+  if(Math.random()<.5){
+    const ws=[];for(let q=0;q<len;q++)if(q!==p)ws.push(d*10**q);
+    return Q(`מהו ערך הספרה ${d} במספר ${LT(nf(num))}?`,nf(d*10**p),sh(ws).map(nf),
+      'ערך הספרה = הספרה × ערך המקום שלה (אחדות, עשרות, מאות, אלפים...).',
+      `הספרה ${d} נמצאת במקום ה${names[p]}, לכן ערכה ${nf(d)} × ${nf(10**p)} = ${nf(d*10**p)}.`);
+  }
+  const ws=names.slice(0,len).filter((x,q)=>q!==p);
+  return Q(`באיזה מקום נמצאת הספרה ${d} במספר ${LT(nf(num))}?`,names[p],sh(ws),
+    'סופרים מימין לשמאל: אחדות, עשרות, מאות, אלפים, עשרות אלפים...',
+    `הספרה ${d} נמצאת במקום ה${names[p]}.`);
+};
+G.addv=()=>{
+  const a=R(12000,689999),b=R(11000,299999),s=a+b;
+  const nb=+String(a).padStart(7,'0').split('').map((x,i)=>(+x+ +String(b).padStart(7,'0')[i])%10).join('');
+  return Q('חשבו את התרגיל:'+'<br>'+vert(a,'+',b),nf(s),nums(s,[nb,s+10,s-10,s+100,s-100,s+1000,s-1000],10).map(x=>x),
+    'מתחילים מהאחדות. כשסכום ספרות גדול מ־9 – כותבים את האחדות ו"זוכרים" 1 לעמודה הבאה.',
+    `${nf(a)} + ${nf(b)} = ${nf(s)}. חיברו עמודה אחר עמודה מימין לשמאל והוסיפו את מה שזכרתם.`);
+};
+G.subv=()=>{
+  const a=R(30000,989999),b=R(10000,a-2000),s=a-b;
+  const A=String(a).padStart(7,'0'),B=String(b).padStart(7,'0');
+  const nb=+A.split('').map((x,i)=>Math.abs(+x-+B[i])).join('');
+  return Q('חשבו את התרגיל:'+'<br>'+vert(a,'−',b),nf(s),nums(s,[nb,s+10,s-10,s+100,s-100,s+1000,s-1000],10),
+    'כשהספרה למעלה קטנה מהספרה למטה – "פורקים" עשרת מהעמודה השמאלית.',
+    `${nf(a)} − ${nf(b)} = ${nf(s)}. בדיקה: ${nf(s)} + ${nf(b)} = ${nf(a)}.`);
+};
+G.mul2=()=>{
+  const a=R(12,98),b=R(12,98),u=b%10,t=(b-u)/10,s=a*b;
+  return Q(`חשבו: ${LT(a+' × '+b)}`,nf(s),nums(s,[a*u+a*t,s+10,s-10,s+100,s-100,a*u*10+a*t],10),
+    `פצלו את ${b} ל־${t*10} ו־${u}: כפלו בכל חלק ואז חברו.`,
+    `${a} × ${u} = ${a*u}; ${a} × ${t*10} = ${a*t*10}; ${a*u} + ${a*t*10} = ${s}.`);
+};
+G.mul3=()=>{
+  const a=R(101,999),b=R(2,9),s=a*b;
+  const h=Math.floor(a/100)*100,te=Math.floor((a%100)/10)*10,u=a%10;
+  return Q(`חשבו: ${LT(a+' × '+b)}`,nf(s),nums(s,[s+10,s-10,s+100,s-100,s+1000,s-1000],10),
+    `פצלו את ${a} למאות, עשרות ואחדות וכפלו כל חלק ב־${b}.`,
+    `${h}×${b}=${h*b}; ${te}×${b}=${te*b}; ${u}×${b}=${u*b}. סכום: ${s}.`);
+};
+G.div=()=>{
+  const d=R(3,9),q=R(101,999),rem=Math.random()<.4?R(1,d-1):0,N=q*d+rem;
+  const t=`חשבו: ${LT(nf(N)+' ÷ '+d)}`;
+  const h='בדיקה: מנה × מחלק + שארית = המחולק. חלקו ספרה אחרי ספרה, משמאל לימין.';
+  const e=`${q} × ${d} = ${q*d}${rem?` ו־${q*d} + ${rem} = ${N}`:''}. לכן התוצאה ${q}${rem?` ושארית ${rem}`:''}.`;
+  if(rem)return Q(t,`${q} ושארית ${rem}`,[`${q} ושארית ${rem+1<d?rem+1:rem-1}`,`${q+1} ושארית ${rem}`,`${q-1} ושארית ${rem}`,`${q+10} ושארית ${rem}`],h,e);
+  return Q(t,nf(q),nums(q,[q+1,q-1,q+10,q-10,q+100],10),h,e);
+};
+G.unknown=()=>{
+  const ty=R(0,3);let x,t,e,c=[];
+  const b=R(1200,6900),a=R(1200,6900);
+  if(ty===0){const cc=a+b;x=a;t=`□ + ${nf(b)} = ${nf(cc)}`;e=`פעולה הפוכה: ${nf(cc)} − ${nf(b)} = ${nf(x)}.`;c=[cc+b,cc+b,x+10,x-10,x+100];}
+  else if(ty===1){const A=a+b+R(100,900),cc=A-b;x=b;t=`${nf(A)} − □ = ${nf(cc)}`;e=`החלק החסר: ${nf(A)} − ${nf(cc)} = ${nf(x)}.`;c=[A+cc,cc-A>0?cc-A:x+10,x+10,x-10,x+100];}
+  else if(ty===2){const cc=a;x=a+b;t=`□ − ${nf(b)} = ${nf(cc)}`;e=`פעולה הפוכה: ${nf(cc)} + ${nf(b)} = ${nf(x)}.`;c=[cc-b>0?cc-b:x+10,x+10,x-10,x+100];}
+  else{const cc=a+b;x=b;t=`${nf(a)} + □ = ${nf(cc)}`;e=`${nf(cc)} − ${nf(a)} = ${nf(x)}.`;c=[cc+a,x+10,x-10,x+100];}
+  return Q(`מצאו את המספר החסר:<br>${LT(t)}`,nf(x),nums(x,c,10),
+    'השתמשו בפעולה ההפוכה: חיבור↔חיסור. בדקו שהתוצאה מתאימה בתרגיל.',e);
+};
+G.order=()=>{
+  const ty=R(0,3);let t,v,w,e;
+  if(ty===0){const a=R(2,20),b=R(2,9),c=R(2,9);t=`${a} + ${b} × ${c}`;v=a+b*c;w=(a+b)*c;e=`כפל לפני חיבור: ${b}×${c}=${b*c}, ואז ${a}+${b*c}=${v}.`;}
+  else if(ty===1){const a=R(2,12),b=R(2,12),c=R(2,9);t=`(${a} + ${b}) × ${c}`;v=(a+b)*c;w=a+b*c;e=`סוגריים קודם: ${a}+${b}=${a+b}, ואז ×${c} = ${v}.`;}
+  else if(ty===2){const c=R(2,9),b=R(2,9),a=R(b*c+1,b*c+40);t=`${a} − ${b} × ${c}`;v=a-b*c;w=(a-b)*c;e=`כפל לפני חיסור: ${b}×${c}=${b*c}, ואז ${a}−${b*c}=${v}.`;}
+  else{const b=R(2,9),q=R(2,12),a=b*q,c=R(2,30);t=`${a} ÷ ${b} + ${c}`;v=q+c;w=a/(b+c);e=`חילוק קודם: ${a}÷${b}=${q}, ואז ${q}+${c}=${v}.`;}
+  return Q(`מה התוצאה? ${LT(t)}`,v,nums(v,[w,v+1,v-1,v+10],3,String),
+    'סדר פעולות: סוגריים, אחר כך כפל וחילוק, ואחר כך חיבור וחיסור.',e);
+};
+G.estimate=()=>{
+  if(Math.random()<.5){
+    const a=R(21,89),b=R(21,89),ra=Math.round(a/10)*10,rb=Math.round(b/10)*10,s=ra*rb;
+    return Q(`אמדו (עגלו לעשרות) את התוצאה:<br>${LT(a+' × '+b)}`,nf(s),nums(s,[s*10,s/10,(ra+10)*rb,ra*(rb+10)],100),
+      'מעגלים כל מספר לעשרות הקרובות ואז מכפילים.',`${a}≈${ra}, ${b}≈${rb}, ולכן ${ra} × ${rb} = ${nf(s)}.`);
+  }
+  const a=R(101,999),b=R(2,9),ra=Math.round(a/100)*100,s=ra*b;
+  return Q(`אמדו (עגלו למאות) את התוצאה:<br>${LT(a+' × '+b)}`,nf(s),nums(s,[s*10,s/10,s+100,s-100],100),
+    'מעגלים את המספר התלת־ספרתי למאות הקרובות ואז מכפילים.',`${a}≈${ra}, ולכן ${ra} × ${b} = ${nf(s)}.`);
+};
+function pie(n,k){
+  let s=`<svg width="190" height="190" viewBox="0 0 190 190"><circle cx="95" cy="95" r="85" fill="#fff" stroke="#1f2a44" stroke-width="3"/>`;
+  for(let i=0;i<n;i++){const a0=90-i*360/n,a1=90-(i+1)*360/n,p0=pol(95,95,85,a0),p1=pol(95,95,85,a1);
+    s+=`<path d="M95,95 L${P(p0)} A85,85 0 0 1 ${P(p1)} Z" fill="${i<k?'#f5a524':'#fff'}" stroke="#1f2a44" stroke-width="2.5"/>`;}
+  return s+'</svg>';
+}
+function bar(n,k){
+  const w=300/n;let s=`<svg width="330" height="70" viewBox="0 0 330 70">`;
+  for(let i=0;i<n;i++)s+=`<rect x="${15+i*w}" y="10" width="${w}" height="50" fill="${i<k?'#f5a524':'#fff'}" stroke="#1f2a44" stroke-width="2.5"/>`;
+  return s+'</svg>';
+}
+G.fracMeaning=()=>{
+  const n=R(3,10),k=R(1,n-1);
+  return Q('איזה שבר מייצג את החלק הצבוע?',fr(k,n),[fr(n-k,n),fr(k,n-k),fr(n,k),fr(k+1,n)],
+    'המכנה = כמה חלקים שווים יש בסך הכול. המונה = כמה חלקים צבועים.',
+    `יש ${n} חלקים שווים, ${k} מהם צבועים: ${fr(k,n)}.`,Math.random()<.5?pie(n,k):bar(n,k));
+};
+G.complete1=()=>{
+  const n=R(4,12),k=R(1,n-1);
+  return Q(`השלימו ל־1:<br>${fr(k,n)} + □ = 1`,fr(n-k,n),[fr(k,n),fr(n-k+1,n),fr(n-k-1>0?n-k-1:1,n),fr(n-k,k+n)],
+    `1 שלם שווה ${fr(n,n)}. כמה חלקים חסרים עד ${n}?`,
+    `1 = ${fr(n,n)}. ${n} − ${k} = ${n-k}, לכן חסר ${fr(n-k,n)}.`);
+};
+G.fracOfQty=()=>{
+  const den=R(2,10),num=R(1,den-1),u=R(2,12),tot=den*u,s=num*u;
+  return Q(`כמה הם ${fr(num,den)} מ־${tot}?`,s,nums(s,[u,tot-s,tot-u,s+den],1,String),
+    `מחלקים את ${tot} ל־${den} חלקים שווים, ואז לוקחים ${num} חלקים.`,
+    `${tot} ÷ ${den} = ${u} (חלק אחד). ${u} × ${num} = ${s}.`);
+};
+G.fracRest=()=>{
+  const den=pick([3,4,5,6,8,10]),num=R(1,den-1),u=R(2,12),tot=den*u,s=num*u,r=tot-s;
+  const what=pick([['בקופסה יש','כדורים','אדומים'],['בכיתה יש','תלמידים','שהלכו לטיול'],['בשק יש','תפוחים','אדומים']]);
+  return Q(`${what[0]} ${tot} ${what[1]}. ${fr(num,den)} מהם ${what[2]}.<br>כמה ${what[1]} <u>אינם</u> ${what[2]}?`,r,nums(r,[s,u,tot-u,r+u],1,String),
+    'קודם מוצאים כמה הם החלק מהכמות, ואחר כך מחסירים מהכמות כולה.',
+    `${tot} ÷ ${den} = ${u}; ${u} × ${num} = ${s}; השאר: ${tot} − ${s} = ${r}.`);
+};
+G.fracAddSub=()=>{
+  const n=R(4,12);
+  if(Math.random()<.5){const a=R(1,n-1),b=R(1,n-1);
+    return Q(`${fr(a,n)} + ${fr(b,n)} = ?`,fr(a+b,n),[fr(a+b,2*n),fr(a+b+1,n),fr(a+b-1>0?a+b-1:a,n),fr(a*b,n)],
+      'במכנים זהים: המכנה נשאר, ומחברים רק את המונים.',`${a} + ${b} = ${a+b}, המכנה נשאר ${n}: ${fr(a+b,n)}.`);}
+  const b=R(1,n-2),a=R(b+1,n-1);
+  return Q(`${fr(a,n)} − ${fr(b,n)} = ?`,fr(a-b,n),[fr(a-b,2*n),fr(a+b,n),fr(a-b+1,n),fr(a-b,a)],
+    'במכנים זהים: המכנה נשאר, ומחסרים רק את המונים.',`${a} − ${b} = ${a-b}, המכנה נשאר ${n}: ${fr(a-b,n)}.`);
+};
+function nline(units,n,pos,labels){
+  const W=330,x0=20,uw=290/units;let s=`<svg width="${W}" height="90" viewBox="0 0 ${W} 90"><line x1="${x0}" y1="50" x2="${x0+290}" y2="50" stroke="#1f2a44" stroke-width="3"/>`;
+  for(let i=0;i<=units*n;i++){const x=x0+i*uw/n,big=i%n===0;
+    s+=`<line x1="${x}" y1="${big?38:43}" x2="${x}" y2="${big?62:57}" stroke="#1f2a44" stroke-width="${big?3:2}"/>`;
+    if(big)s+=`<text x="${x}" y="80" text-anchor="middle" font-size="16" font-weight="700">${i/n}</text>`;}
+  const px=x0+pos*uw/n;
+  return s+`<polygon points="${px-8},12 ${px+8},12 ${px},32" fill="#e5484d"/></svg>`;
+}
+G.numlineFrac=()=>{
+  const n=R(3,10),k=R(1,n-1);
+  return Q('איזה שבר מסומן בחץ האדום על ציר המספרים?',fr(k,n),[fr(k+1,n),fr(k-1>0?k-1:k+2,n),fr(n-k,n),fr(k,n+1)],
+    'בין 0 ל־1 יש חלקים שווים. ספרו כמה חלקים עד החץ וכמה חלקים יש בסך הכול.',
+    `בין 0 ל־1 יש ${n} חלקים שווים. החץ אחרי ${k} חלקים: ${fr(k,n)}.`,nline(1,n,k));
+};
+G.numlineMixed=()=>{
+  const n=R(2,6),w=R(1,2),k=R(1,n-1);
+  return Q('איזה מספר מעורב מסומן בחץ האדום?',mixed(w,k,n),[mixed(w,k+1<n?k+1:k-1>0?k-1:k+1,n),mixed(w+1,k,n),mixed(w-1>0?w-1:w+2,k,n),mixed(w,n-k,n)],
+    'קודם קראו את השלם האחרון שעברנו, ואז ספרו חלקים מעבר אליו.',
+    `עברנו את ${w} ועוד ${k} חלקים מתוך ${n}: ${mixed(w,k,n)}.`,nline(3,n,w*n+k));
+};
+G.mixedToImp=()=>{
+  const n=R(2,9),w=R(1,6),k=R(1,n-1),s=w*n+k;
+  return Q(`הפכו לשבר פשוט: ${mixed(w,k,n)}`,fr(s,n),[fr(w+k,n),fr(s+1,n),fr(w*k,n),fr(s-1,n)],
+    'כופלים את השלם במכנה ומוסיפים את המונה. המכנה נשאר.',
+    `${w} × ${n} = ${w*n}; ${w*n} + ${k} = ${s}. התוצאה ${fr(s,n)}.`);
+};
+G.impToMixed=()=>{
+  const n=R(2,9),w=R(1,6),k=R(1,n-1),s=w*n+k;
+  return Q(`הפכו למספר מעורב: ${fr(s,n)}`,mixed(w,k,n),[mixed(w+1,k,n),mixed(w,k+1<n?k+1:k-1,n),mixed(w-1>0?w-1:w+2,k,n),mixed(k,w<n?w:w-1,n)],
+    'מחלקים את המונה במכנה: המנה היא השלם, והשארית היא המונה החדש.',
+    `${s} ÷ ${n} = ${w} ושארית ${k}. התוצאה ${mixed(w,k,n)}.`);
+};
+G.compareFr=()=>{
+  const ty=R(0,3),sg=['>','<','='];
+  const SQ=(t,r,h,e)=>Q(t,r,sg.filter(x=>x!==r),h,e);
+  if(ty===0){const n=R(4,12);let a=R(1,n-1),b=R(1,n-1);const r=a>b?'>':a<b?'<':'=';
+    return SQ(`השוו: ${fr(a,n)} ◻ ${fr(b,n)}`,r,'כשהמכנים זהים – גדול יותר השבר עם המונה הגדול.',`המכנים זהים (${n}), משווים מונים: ${a} ${r} ${b}.`);}
+  if(ty===1){const a=R(1,5),n1=R(a+1,9);let n2=R(a+1,9);const r=n1<n2?'>':n1>n2?'<':'=';
+    return SQ(`השוו: ${fr(a,n1)} ◻ ${fr(a,n2)}`,r,'כשהמונים זהים – גדול יותר השבר עם המכנה הקטן (חלקים גדולים יותר).',`המונים זהים. ${n1} ${n1<n2?'קטן':n1>n2?'גדול':'שווה'} מ־${n2}, ולכן ${fr(a,n1)} ${r} ${fr(a,n2)}.`);}
+  if(ty===2){const n=R(5,12),ns=sh([...Array(n-1).keys()].map(x=>x+1)).slice(0,4),m=Math.max(...ns);
+    return Q('איזה שבר הוא הגדול ביותר?',fr(m,n),ns.filter(x=>x!==m).map(x=>fr(x,n)),'המכנים זהים – מחפשים את המונה הגדול ביותר.',`המונה הגדול ביותר הוא ${m}, לכן ${fr(m,n)}.`);}
+  const n=R(3,8),w=R(1,4),k=R(1,n-1),s=w*n+k,d=pick([-1,0,1]),imp=s+d,r=d===0?'=':d>0?'<':'>';
+  return SQ(`השוו: ${mixed(w,k,n)} ◻ ${fr(imp,n)}`,r,'הפכו את המספר המעורב לשבר פשוט ואז השוו מונים.',`${mixed(w,k,n)} = ${fr(s,n)}. משווים ${s} ו־${imp}: ${mixed(w,k,n)} ${r} ${fr(imp,n)}.`);
+};
+function angSvg(th,lab){
+  const cx=150,cy=130,L=110,[x,y]=pol(cx,cy,L,th);let s=`<svg width="300" height="150" viewBox="0 0 300 150"><line x1="${cx}" y1="${cy}" x2="${cx+L}" y2="${cy}" stroke="#3b6cf6" stroke-width="4" stroke-linecap="round"/><line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e5484d" stroke-width="4" stroke-linecap="round"/>`;
+  if(th===90)s+=`<path d="M${cx+16},${cy} v-16 h-16" fill="none" stroke="#1f2a44" stroke-width="2.5"/>`;
+  else if(th<180){const [ax,ay]=pol(cx,cy,30,th);s+=`<path d="M${cx+30},${cy} A30,30 0 0 0 ${P([ax,ay])}" fill="none" stroke="#1f2a44" stroke-width="2.5"/>`;}
+  else s+=`<path d="M${cx+30},${cy} A30,30 0 0 0 ${cx-30},${cy}" fill="none" stroke="#1f2a44" stroke-width="2.5"/>`;
+  if(lab){const [lx,ly]=pol(cx,cy,52,th/2);s+=`<text x="${lx}" y="${ly+5}" text-anchor="middle" font-size="16" font-weight="800">${lab}</text>`;}
+  return s+'</svg>';
+}
+G.angleType=()=>{
+  const ty=pick(['חדה','ישרה','קהה','שטוחה']);
+  const th=ty==='חדה'?R(2,16)*5:ty==='ישרה'?90:ty==='קהה'?R(19,35)*5:180;
+  const ws=['חדה','ישרה','קהה','שטוחה'].filter(x=>x!==ty);
+  const e={חדה:'קטנה מ־90°',ישרה:'בדיוק 90°',קהה:'גדולה מ־90° וקטנה מ־180°',שטוחה:'בדיוק 180°'}[ty];
+  if(Math.random()<.5)return Q('איזה סוג זווית מוצגת בציור?',ty,ws,'חדה < 90°, ישרה = 90°, קהה בין 90° ל־180°, שטוחה = 180°.',`זווית ${ty} היא ${e}.`,angSvg(th));
+  return Q(`זווית של ${th}° היא זווית...`,ty,ws,'חדה < 90°, ישרה = 90°, קהה בין 90° ל־180°, שטוחה = 180°.',`זווית ${ty} היא ${e}.`);
+};
+G.angleMeasure=()=>{
+  if(Math.random()<.3){const c=pick([['באיזה כלי מודדים זווית?','מד־זווית',['סרגל','מחוגה','מאזניים']],['באיזו יחידה מודדים זווית?','מעלות',['סנטימטרים','ליטרים','קילוגרמים']],['כמה מעלות יש בזווית ישרה?','90°',['45°','180°','100°']],['כמה מעלות יש בזווית שטוחה?','180°',['90°','360°','100°']]]);
+    return Q(c[0],c[1],c[2],'חשבו על הכלי והיחידות שמשתמשים בהם בגאומטריה.','תשובה: '+c[1]+'.');}
+  const th=R(1,17)*10,cx=160,cy=150;let s=`<svg width="320" height="175" viewBox="0 0 320 175"><path d="M30,150 A130,130 0 0 1 290,150 Z" fill="#f5f8ff" stroke="#1f2a44" stroke-width="2.5"/><line x1="${cx}" y1="${cy}" x2="${cx+140}" y2="${cy}" stroke="#3b6cf6" stroke-width="4"/>`;
+  for(let d=0;d<=180;d+=10){const a=pol(cx,cy,130,d),b=pol(cx,cy,d%30===0?112:120,d),t=pol(cx,cy,98,d);
+    s+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#1f2a44" stroke-width="1.5"/><text x="${t[0]}" y="${t[1]+4}" text-anchor="middle" font-size="11">${d}</text>`;}
+  const q=pol(cx,cy,145,th);s+=`<line x1="${cx}" y1="${cy}" x2="${q[0]}" y2="${q[1]}" stroke="#e5484d" stroke-width="4"/></svg>`;
+  return Q('מה גודל הזווית בין הקרן הכחולה לקרן האדומה?',th+'°',[(180-th)+'°',(th+10)+'°',(th-10>0?th-10:th+20)+'°'],
+    'מניחים את הקרן הכחולה על ה־0 וקוראים את המספר שבו עוברת הקרן האדומה.',`הקרן הכחולה על 0 והאדומה על ${th}, לכן הזווית ${th}°.`,s);
+};
+G.angleAdj=()=>{
+  const cx=150,cy=125,L=105;
+  if(Math.random()<.65){const x=R(3,33)*5,ans=180-x;
+    const [mx,my]=pol(cx,cy,L,x),a=pol(cx,cy,48,x/2),b=pol(cx,cy,48,(x+180)/2);
+    const sv=`<svg width="300" height="140" viewBox="0 0 300 140"><line x1="${cx-L}" y1="${cy}" x2="${cx+L}" y2="${cy}" stroke="#1f2a44" stroke-width="4"/><line x1="${cx}" y1="${cy}" x2="${mx}" y2="${my}" stroke="#e5484d" stroke-width="4"/><text x="${a[0]}" y="${a[1]+5}" text-anchor="middle" font-size="16" font-weight="800">${x}°</text><text x="${b[0]}" y="${b[1]+5}" text-anchor="middle" font-size="18" font-weight="800" fill="#e5484d">?</text></svg>`;
+    return Q('שתי זוויות סמוכות על ישר. מהי הזווית המסומנת ב־?',ans+'°',[(90-x>0?90-x:x+10)+'°',x+'°',(360-x)+'°'],
+      'זוויות סמוכות על ישר משלימות ל־180°.',`180 − ${x} = ${ans}.`,sv);}
+  const x=R(2,16)*5,ans=90-x,[mx,my]=pol(cx,cy,L,x),a=pol(cx,cy,50,x/2),b=pol(cx,cy,50,(x+90)/2);
+  const sv=`<svg width="300" height="140" viewBox="0 0 300 140"><line x1="${cx}" y1="${cy}" x2="${cx+L}" y2="${cy}" stroke="#1f2a44" stroke-width="4"/><line x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy-L}" stroke="#1f2a44" stroke-width="4"/><path d="M${cx+16},${cy} v-16 h-16" fill="none" stroke="#1f2a44" stroke-width="2.5"/><line x1="${cx}" y1="${cy}" x2="${mx}" y2="${my}" stroke="#e5484d" stroke-width="4"/><text x="${a[0]+8}" y="${a[1]+5}" text-anchor="middle" font-size="15" font-weight="800">${x}°</text><text x="${b[0]}" y="${b[1]+5}" text-anchor="middle" font-size="18" font-weight="800" fill="#e5484d">?</text></svg>`;
+  return Q('הזווית הגדולה היא זווית ישרה (90°). מהי הזווית המסומנת ב־?',ans+'°',[(180-x)+'°',x+'°',(ans+10)+'°'],
+    'שתי הזוויות יחד יוצרות זווית ישרה: 90°.',`90 − ${x} = ${ans}.`,sv);
+};
+G.angleVert=()=>{
+  const th=pick([30,35,40,45,50,55,60,65,70,75,110,115,120,125,130,135,140,145,150]),cx=150,cy=75,L=100;
+  const ask=pick(['opp','adj']);let s=`<svg width="300" height="150" viewBox="0 0 300 150">`;
+  for(const d of [0,th]){const a=pol(cx,cy,L,d),b=pol(cx,cy,L,d+180);s+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#1f2a44" stroke-width="4" stroke-linecap="round"/>`;}
+  const a1=pol(cx,cy,42,th/2/1.0),a2=ask==='opp'?pol(cx,cy,42,180+th/2):pol(cx,cy,42,(th+180)/2);
+  s+=`<text x="${a1[0]}" y="${a1[1]+5}" text-anchor="middle" font-size="15" font-weight="800">${th}°</text><text x="${a2[0]}" y="${a2[1]+5}" text-anchor="middle" font-size="18" font-weight="800" fill="#e5484d">?</text></svg>`;
+  if(ask==='opp')return Q('שני ישרים נחתכים. מהי הזווית הנגדית (המסומנת ב־?)',th+'°',[(180-th)+'°',(90-th>0?90-th:th+10)+'°',(360-2*th>0?360-2*th:th+20)+'°'],
+    'זוויות נגדיות (ניצבות זו מול זו בנקודת החיתוך) שוות זו לזו.',`זוויות נגדיות שוות: ${th}°.`,s);
+  return Q('שני ישרים נחתכים. מהי הזווית הסמוכה (המסומנת ב־?)',(180-th)+'°',[th+'°',(90-th>0?90-th:th+10)+'°',(360-th)+'°'],
+    'זוויות סמוכות על ישר משלימות ל־180°.',`180 − ${th} = ${180-th}.`,s);
+};
+G.perpPar=()=>{
+  if(Math.random()<.4){const c=pick([['ישרים מאונכים נחתכים בזווית של...','90°',['45°','180°','60°']],['ישרים מקבילים...','לעולם לא נחתכים',['נחתכים בזווית ישרה','נחתכים בנקודה אחת','נחתכים בשתי נקודות']],['איזה מהזוגות הם ישרים מקבילים?','שני קווים בצידי הכביש הישר',['שתי קרנות חיתוך בשעון','שתי צלעות סמוכות של מלבן','מחוגי שעון ב־3:00']],['הצלעות הסמוכות במלבן הן...','מאונכות',['מקבילות','שוות תמיד','חופפות']]]);
+    return Q(c[0],c[1],c[2],'ישרים מאונכים יוצרים זווית ישרה; ישרים מקבילים לא נפגשים לעולם.','תשובה: '+c[1]+'.');}
+  const ty=pick(['par','perp','cross']),cx=150,cy=70,L=115;let f=R(-25,25),ang2,s=`<svg width="300" height="150" viewBox="0 0 300 150">`;
+  const ln=(x,y,d)=>{const a=pol(x,y,L,d),b=pol(x,y,L,d+180);return `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#1f2a44" stroke-width="4" stroke-linecap="round"/>`;};
+  if(ty==='par'){s+=ln(cx,cy-30,f)+ln(cx,cy+30,f);}
+  else{ang2=ty==='perp'?f+90:f+pick([40,55,65,115,130]);s+=ln(cx,cy,f)+ln(cx,cy,ang2);
+    if(ty==='perp'){const u=pol(0,0,14,f),v=pol(0,0,14,f+90);s+=`<path d="M${cx+u[0]},${cy+u[1]} l${v[0]},${v[1]} l${-u[0]},${-u[1]}" fill="none" stroke="#e5484d" stroke-width="2.5"/>`;}}
+  const ans={par:'מקבילים',perp:'מאונכים',cross:'נחתכים אך לא מאונכים'}[ty];
+  return Q('מה היחס בין שני הישרים בציור?',ans,['מקבילים','מאונכים','נחתכים אך לא מאונכים'].filter(x=>x!==ans),
+    'מקבילים – לא נפגשים. מאונכים – נפגשים בזווית ישרה (90°).',`${ans==='נחתכים אך לא מאונכים'?'הם נפגשים בזווית שאינה ישרה.':ans==='מאונכים'?'הם נפגשים בזווית ישרה.':'הם לא נפגשים לעולם.'}`,s+'</svg>');
+};
+function rect(a,b,la,lb){
+  const k=Math.min(220/a,110/b),w=a*k,h=b*k,x=(300-w)/2,y=(150-h)/2+5;
+  return `<svg width="300" height="150" viewBox="0 0 300 150"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#e8f0ff" stroke="#1f2a44" stroke-width="3"/><text x="150" y="${y-4}" text-anchor="middle" font-size="16" font-weight="800">${la}</text><text x="${x+w+6}" y="${y+h/2+5}" font-size="16" font-weight="800">${lb}</text></svg>`;
+}
+G.perimeter=()=>{
+  const ty=R(0,3);
+  if(ty===0){const a=R(5,20),b=R(2,a-1);return Q(`מלבן שאורכו ${a} ס״מ ורוחבו ${b} ס״מ. מהו ההיקף שלו?`,(2*(a+b))+' ס״מ',[a*b+' ס״מ',(a+b)+' ס״מ',(2*a+b)+' ס״מ'],
+    'היקף = סכום כל ארבע הצלעות = 2 × (אורך + רוחב).',`2 × (${a} + ${b}) = ${2*(a+b)} ס״מ.`,rect(a,b,a,b));}
+  if(ty===1){const s=R(3,15);return Q(`ריבוע שצלעו ${s} ס״מ. מהו ההיקף שלו?`,(4*s)+' ס״מ',[s*s+' ס״מ',(2*s)+' ס״מ',(s+4)+' ס״מ'],
+    'בריבוע 4 צלעות שוות: היקף = 4 × צלע.',`4 × ${s} = ${4*s} ס״מ.`,rect(1,1,s,s));}
+  if(ty===2){const a=R(6,20),b=R(2,a-1),p=2*(a+b);return Q(`היקף מלבן הוא ${p} ס״מ ואחת הצלעות ${a} ס״מ. מה אורך הצלע השנייה?`,b+' ס״מ',[(p-a)+' ס״מ',(p/2)+' ס״מ',(p-2*a)+' ס״מ'].filter(x=>x!==b+' ס״מ'),
+    'חצי מההיקף = אורך + רוחב. מחסירים את הצלע הידועה.',`${p} ÷ 2 = ${p/2}; ${p/2} − ${a} = ${b} ס״מ.`);}
+  const s=R(3,15);return Q(`היקף ריבוע הוא ${4*s} ס״מ. מה אורך צלע אחת?`,s+' ס״מ',[(4*s/2)+' ס״מ',(4*s-4)+' ס״מ',(s*s)+' ס״מ'].filter(x=>x!==s+' ס״מ'),
+    'בריבוע 4 צלעות שוות – מחלקים את ההיקף ב־4.',`${4*s} ÷ 4 = ${s} ס״מ.`);
+};
+G.area=()=>{
+  const ty=R(0,3);
+  if(ty===0){const a=R(5,20),b=R(2,a-1);return Q(`מלבן שאורכו ${a} ס״מ ורוחבו ${b} ס״מ. מהו השטח שלו?`,a*b+' סמ״ר',[(2*(a+b))+' סמ״ר',(a+b)+' סמ״ר',(a*b+a)+' סמ״ר'],
+    'שטח מלבן = אורך × רוחב (ביחידות ריבועיות).',`${a} × ${b} = ${a*b} סמ״ר.`,rect(a,b,a,b));}
+  if(ty===1){const s=R(3,15);return Q(`ריבוע שצלעו ${s} ס״מ. מהו השטח שלו?`,s*s+' סמ״ר',[(4*s)+' סמ״ר',(2*s)+' סמ״ר',(s*s+s)+' סמ״ר'],
+    'שטח ריבוע = צלע × צלע.',`${s} × ${s} = ${s*s} סמ״ר.`,rect(1,1,s,s));}
+  if(ty===2){const a=R(6,20),b=R(2,a-1),A=a*b;return Q(`שטח מלבן ${A} סמ״ר ואחת הצלעות ${a} ס״מ. מה אורך הצלע השנייה?`,b+' ס״מ',[(A-a)+' ס״מ',(A/2)+' ס״מ',(b+a)+' ס״מ'].filter(x=>x!==b+' ס״מ'),
+    'שטח = אורך × רוחב, לכן הצלע החסרה = שטח ÷ הצלע הידועה.',`${A} ÷ ${a} = ${b} ס״מ.`);}
+  const s=R(3,12);return Q(`שטח ריבוע הוא ${s*s} סמ״ר. מה אורך צלע אחת?`,s+' ס״מ',[(s*s/2)+' ס״מ',(s*s/4)+' ס״מ',(s*4)+' ס״מ'].filter(x=>x!==s+' ס״מ'),
+    'מחפשים מספר שמוכפל בעצמו ונותן את השטח.',`${s} × ${s} = ${s*s}, לכן הצלע ${s} ס״מ.`);
+};
+const INCL=[
+['כל מלבן הוא מקבילית',1,'במלבן שני זוגות הצלעות הנגדיות מקבילות – לכן הוא מקבילית.'],
+['כל מקבילית היא מלבן',0,'במקבילית הזוויות לא חייבות להיות ישרות.'],
+['במלבן כל הזוויות ישרות',1,'זו התכונה שמבדילה מלבן ממקבילית.'],
+['במקבילית כל הזוויות ישרות',0,'לא תמיד – רק במלבן.'],
+['כל ריבוע הוא מלבן',1,'ריבוע הוא מלבן שכל צלעותיו שוות.'],
+['כל מלבן הוא ריבוע',0,'במלבן הצלעות הסמוכות לא חייבות להיות שוות.'],
+['במקבילית כל זוג צלעות נגדיות מקבילות ושוות',1,'זו ההגדרה של מקבילית.'],
+['מלבן הוא מקרה פרטי של מקבילית',1,'כל תכונות המקבילית קיימות במלבן, ועוד זוויות ישרות.'],
+['מקבילית היא מקרה פרטי של מלבן',0,'להפך: מלבן הוא מקרה פרטי של מקבילית.'],
+['כל ריבוע הוא מקבילית',1,'ריבוע ⊂ מלבן ⊂ מקבילית.'],
+['במלבן כל הצלעות הסמוכות שוות',0,'זה נכון בריבוע בלבד.'],
+['הצלעות הנגדיות במלבן מקבילות',1,'כמו בכל מקבילית.']];
+G.inclusion=()=>{
+  if(Math.random()<.25){const c=pick([['איזו צורה היא גם מקבילית וגם בעלת 4 זוויות ישרות?','מלבן',['טרפז','מקבילית שאינה מלבן','משולש']],['איזו צורה היא מקרה פרטי של מלבן?','ריבוע',['מקבילית','טרפז','משולש']],['איזו צורה כוללת את כל האחרות?','מקבילית (כוללת מלבן וריבוע)',['ריבוע','מלבן','משולש']]]);
+    return Q(c[0],c[1],c[2],'חשבו: ריבוע ⊂ מלבן ⊂ מקבילית.','תשובה: '+c[1]+'.');}
+  const c=pick(INCL);
+  return Q(`נכון או לא נכון?<br>"${c[0]}"`,c[1]?'נכון':'לא נכון',[c[1]?'לא נכון':'נכון'],'חשבו: ריבוע ⊂ מלבן ⊂ מקבילית (כל ריבוע הוא מלבן, כל מלבן הוא מקבילית).',c[2]);
+};
+G.tri=()=>{
+  const ty=pick(['שווה צלעות','שווה שוקיים','שונה צלעות']);let s;
+  if(ty==='שווה צלעות'){const a=R(3,12);s=[a,a,a];}
+  else if(ty==='שווה שוקיים'){const a=R(3,10),b=R(a+1,2*a-1);s=sh([a,a,b]);}
+  else{const a=R(4,9);s=sh([a,a+2,a+3]);}
+  return Q(`משולש שאורכי צלעותיו ${s.join(', ')} ס״מ הוא...`,ty,['שווה צלעות','שווה שוקיים','שונה צלעות'].filter(x=>x!==ty).concat(['קהה זווית']),
+    'ספרו כמה צלעות שוות יש: שלוש – שווה צלעות, שתיים – שווה שוקיים, אפס – שונה צלעות.',`מספר הצלעות השוות קובע: משולש ${ty}.`);
+};
+const SK={
+place:['ערך הספרה במספר','חשבון','🔢'],addv:['חיבור במאונך','חשבון','➕'],subv:['חיסור במאונך','חשבון','➖'],
+mul2:['כפל דו־ספרתי × דו־ספרתי','חשבון','✖️'],mul3:['כפל תלת־ספרתי × חד־ספרתי','חשבון','✖️'],div:['חילוק ארוך','חשבון','➗'],
+unknown:['תרגילים עם נעלם','חשבון','❓'],order:['סדר פעולות','חשבון','🧩'],estimate:['אומדן בכפל','חשבון','🎯'],
+fracMeaning:['משמעות השבר','שברים','🍕'],complete1:['השלמה ל־1','שברים','1️⃣'],fracOfQty:['שבר כחלק מכמות','שברים','🍫'],
+fracRest:['שבר מכמות – "מה שנשאר"','שברים','🎒'],fracAddSub:['חיבור וחיסור שברים','שברים','➕'],
+numlineFrac:['שבר על ציר המספרים','שברים','📏'],numlineMixed:['מספר מעורב על הציר','שברים','📐'],
+mixedToImp:['מעורב ← שבר פשוט','שברים','🔄'],impToMixed:['שבר פשוט ← מעורב','שברים','🔄'],compareFr:['השוואת שברים','שברים','⚖️'],
+angleType:['סוגי זוויות','גאומטריה','📐'],angleMeasure:['מדידת זווית','גאומטריה','📏'],angleAdj:['זוויות סמוכות','גאומטריה','🔺'],
+angleVert:['זוויות נגדיות','גאומטריה','❌'],perpPar:['ישרים מאונכים ומקבילים','גאומטריה','🛤️'],
+perimeter:['היקף מלבן וריבוע','גאומטריה','🟦'],area:['שטח מלבן וריבוע','גאומטריה','🟩'],
+inclusion:['יחסי הכלה: מקבילית ומלבן','גאומטריה','🔷'],tri:['סוגי משולשים','גאומטריה','🔺']};
+const KEYS=Object.keys(SK),MAXG=2,KEY='brenner_math_game_v1',RN=14;
+let profile={nick:'',m:{},rounds:0},STORE_OK=true;
+try{const s=localStorage.getItem(KEY);if(s)profile=Object.assign(profile,JSON.parse(s));localStorage.setItem(KEY+'_t','1');}catch(e){STORE_OK=false;}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(profile));}catch(e){}};
+const $=id=>document.getElementById(id);
+const mm=k=>Math.min(MAXG,profile.m[k]||0);
+const pctNow=()=>Math.floor(KEYS.reduce((s,k)=>s+mm(k)/MAXG,0)/KEYS.length*100+1e-9);
+// ---------- sound ----------
+let ac=null,master=null,muted=false;try{muted=localStorage.getItem(KEY+'_mute')==='1';}catch(e){}
+function ctx(){if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)();master=ac.createGain();master.gain.value=1.4;const c=ac.createDynamicsCompressor();master.connect(c);c.connect(ac.destination);}catch(e){return null;}}
+  if(ac.state==='suspended')ac.resume();return ac;}
+function tone(f,t,d,type='triangle',v=.35){const a=ctx();if(!a||muted)return;const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;
+  g.gain.setValueAtTime(0,a.currentTime+t);g.gain.linearRampToValueAtTime(v,a.currentTime+t+.02);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+t+d);
+  o.connect(g);g.connect(master);o.start(a.currentTime+t);o.stop(a.currentTime+t+d+.05);}
+function clap(dur){const a=ctx();if(!a||muted)return;
+  for(let i=0;i<dur*18;i++){const t=i/18+Math.random()*.05,b=a.createBuffer(1,a.sampleRate*.08,a.sampleRate),d=b.getChannelData(0);
+    for(let j=0;j<d.length;j++)d[j]=(Math.random()*2-1)*Math.exp(-j/(a.sampleRate*.015));
+    const s=a.createBufferSource();s.buffer=b;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=1500+Math.random()*2500;f.Q.value=.8;
+    const g=a.createGain();g.gain.value=.5+Math.random()*.5;s.connect(f);f.connect(g);g.connect(master);s.start(a.currentTime+t);}}
+const snd={
+ ok(){[523,659,784].forEach((f,i)=>tone(f,i*.09,.25));clap(1.2);},
+ bad(){tone(180,0,.3,'sawtooth',.25);tone(140,.15,.35,'sawtooth',.25);},
+ bonus(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,i*.1,.3));clap(2.2);},
+ fin(){[523,659,784,659,784,1047].forEach((f,i)=>tone(f,i*.14,.35));clap(3);}};
+$('mute').textContent=muted?'🔇':'🔊';
+$('mute').onclick=()=>{muted=!muted;$('mute').textContent=muted?'🔇':'🔊';try{localStorage.setItem(KEY+'_mute',muted?'1':'0');}catch(e){}if(!muted)tone(660,0,.2);};
+// ---------- start screen ----------
+function etaText(){const rem=KEYS.reduce((s,k)=>s+MAXG-mm(k),0);if(rem<=0)return '🏆 שלטתם בכל הנושאים! המשיכו לתרגל כדי לא לשכוח.';
+  return `עוד כ־${Math.ceil(rem/11)} משחקים מעורבים עד 100%`;}
+function renderStart(){
+  $('nick').value=profile.nick||'';const p=pctNow();$('pctBig').textContent=p+'%';$('pctBar').style.width=p+'%';$('eta').textContent=etaText();
+  $('storeWarn').classList.toggle('hide',STORE_OK);
+  let h='',g='';
+  for(const k of KEYS){const [n,gr,ic]=SK[k];if(gr!==g){g=gr;h+=`<div class="grp">${gr}</div>`;}
+    const pc=Math.round(mm(k)/MAXG*100);h+=`<div class="tp" data-k="${k}"><span>${ic}</span><span class="n">${n}</span><div class="bar"><b style="width:${pc}%"></b></div><span class="p">${pc}%</span></div>`;}
+  $('topics').innerHTML=h;
+  $('topics').querySelectorAll('.tp').forEach(e=>e.onclick=()=>start(e.dataset.k));
+}
+function show(id){['sStart','sGame','sRes'].forEach(x=>$(x).classList.toggle('hide',x!==id));window.scrollTo(0,0);}
+let mode=null;
+function start(topic){
+  const v=$('nick').value.trim();
+  if(v.length<2){$('nick').classList.add('err');$('nick').focus();$('nick').placeholder='קודם כותבים כינוי ✍️';return;}
+  $('nick').classList.remove('err');profile.nick=v;save();ctx();
+  mode=topic||null;buildRound();show('sGame');nextQ();
+}
+$('goMix').onclick=()=>start(null);
+$('nick').oninput=()=>$('nick').classList.remove('err');
+let rsT=0;$('resetBtn').onclick=()=>{if(Date.now()-rsT<4000){profile.m={};profile.rounds=0;save();renderStart();$('resetBtn').textContent='איפוס התקדמות';rsT=0;}else{rsT=Date.now();$('resetBtn').textContent='לחצו שוב לאישור מחיקה';setTimeout(()=>{$('resetBtn').textContent='איפוס התקדמות';},4000);}};
+// ---------- round ----------
+let rq=[],qi=0,cur=null,mist=0,locked=false,streak=0,roundPts=0,roundOk=0,startPct=0,startMast=[],seen=new Set();
+function weighted(excl){
+  const w=KEYS.map(k=>k===excl?0:(MAXG-mm(k))+.3),tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot;
+  for(let i=0;i<KEYS.length;i++){r-=w[i];if(r<=0)return KEYS[i];}return KEYS[0];}
+function buildRound(){
+  rq=[];let last=null,cnt={};const N=mode?8:RN;
+  for(let i=0;i<N;i++){let k=mode||weighted(last);if(!mode&&(cnt[k]||0)>=2)k=weighted(k);
+    cnt[k]=(cnt[k]||0)+1;last=k;rq.push(k);}
+  qi=0;streak=0;roundPts=0;roundOk=0;startPct=pctNow();startMast=KEYS.filter(k=>mm(k)>=MAXG);seen=new Set();
+}
+const OKM=['יפה מאוד! 👏','בדיוק! 🌟','מעולה!','נכון! כל הכבוד','וואו, אלופה/אלוף! 🏅'];
+const BADM=['כמעט… נסו שוב 🙂','לא נורא, יש רמז!','עוד ניסיון, אתם יכולים!'];
+function say(m,f){$('bub').textContent=m;if(f){const e=$('face');e.classList.remove('hop','shake');void e.offsetWidth;e.classList.add(f);}}
+function nextQ(){
+  if(qi>=rq.length)return finish();
+  $('pad').classList.add('hide');ST=null;
+  const k=rq[qi];
+  if(II[k])return startInter(k);let q,g=0;do{q=G[k]();g++;}while(seen.has(q.t+q.v)&&g<8);seen.add(q.t+q.v);
+  cur=q;cur.k=k;cur._qi=qi;mist=0;locked=false;
+  $('qn').textContent=`${qi+1}/${rq.length}`;$('rbar').style.width=(qi/rq.length*100)+'%';$('pctSm').textContent=pctNow()+'%';
+  $('qt').innerHTML=q.t;$('qv').innerHTML=q.v;
+  $('opts').innerHTML=q.o.map((o,i)=>`<button class="opt" data-i="${i}">${o}</button>`).join('');
+  $('opts').querySelectorAll('.opt').forEach(b=>b.onclick=()=>choose(+b.dataset.i));
+  ['hint','expl','next'].forEach(x=>$(x).classList.add('hide'));
+  say(`${SK[k][2]} ${SK[k][0]}`);
+}
+function choose(i){
+  if(locked)return;const b=$('opts').children[i];if(b.classList.contains('bad'))return;
+  if(i===cur.a){
+    locked=true;b.classList.add('ok');const pts=[1,.5,0][Math.min(mist,2)];
+    profile.m[cur.k]=Math.min(MAXG,(profile.m[cur.k]||0)+pts);roundPts+=pts;if(pts>0)roundOk++;save();
+    if(mist===0){streak++;snd.ok();say(pick(OKM),'hop');}else{snd.ok();say('נכון! עכשיו אתם יודעים 💡','hop');}
+    if(mist===0&&streak>0&&streak%4===0){setTimeout(()=>{snd.bonus();toast('🎁 בונוס! '+streak+' ברצף!');},350);}
+    $('pctSm').textContent=pctNow()+'%';
+    if(mist===0&&!(streak%4===0)){setTimeout(()=>{if(cur&&locked&&!$('next').classList.contains('hide')){}},0);}
+    $('next').classList.remove('hide');
+    if(mist===0)setTimeout(()=>{if(locked&&qi===cur._qi)advance();},1300);
+  }else{
+    mist++;streak=0;b.classList.add('bad');snd.bad();
+    if(mist===1){say(pick(BADM),'shake');$('hint').innerHTML='💡 רמז: '+cur.h;$('hint').classList.remove('hide');}
+    else{locked=true;$('opts').children[cur.a].classList.add('ok');say('הנה הפתרון – נלמד ונמשיך 📘','shake');
+      $('expl').innerHTML='📘 הסבר: '+cur.e;$('expl').classList.remove('hide');$('next').classList.remove('hide');}
+  }
+}
+function advance(){qi++;nextQ();}
+$('next').onclick=advance;
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&!$('sGame').classList.contains('hide')&&!$('next').classList.contains('hide'))advance();});
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1700);}
+$('quit').onclick=()=>{ST=null;$('pad').classList.add('hide');renderStart();show('sStart');};
+function finish(){
+  profile.rounds=(profile.rounds||0)+1;save();snd.fin();
+  const p=pctNow(),gain=p-startPct,n=rq.length,newM=KEYS.filter(k=>mm(k)>=MAXG&&!startMast.includes(k));
+  $('resScore').textContent=`${roundOk}/${n}`;
+  $('resSub').textContent=`${profile.nick}, מוכנות למבחן: ${p}%${gain>0?` (+${gain}%)`:''}`;
+  $('resBar').style.width=p+'%';
+  $('resMsg').textContent=p>=100?'🏆 100%! אתם מוכנים למבחן!':roundOk>=n*.8?'כל הכבוד! עוד קצת ואתם שם 🌟':'יפה שהתאמנתם – כל משחק מקרב אתכם 💪';
+  const weak=KEYS.filter(k=>mm(k)<MAXG).sort((a,b)=>mm(a)-mm(b)).slice(0,3);
+  $('resList').innerHTML=(newM.length?`<b>נושאים שנשלטו עכשיו:</b><ul>${newM.map(k=>`<li>✅ ${SK[k][0]}</li>`).join('')}</ul>`:'')+
+    (weak.length?`<b>כדאי לחזק:</b><ul>${weak.map(k=>`<li>${SK[k][2]} ${SK[k][0]}</li>`).join('')}</ul>`:'')+`<div class="sub">${etaText()}</div>`;
+  show('sRes');
+}
+$('again').onclick=()=>{buildRound();show('sGame');nextQ();};
+$('home').onclick=()=>{renderStart();show('sStart');};
+// ---------- interactive on-screen calculation ----------
+const NM=['אחדות','עשרות','מאות','אלפים','עשרות אלפים'];
+function vR(top,op,bot,rows,res,w){const l=[String(top).padStart(w),op+String(bot).padStart(w-1),'─'.repeat(w)];
+  (rows||[]).forEach(r=>l.push(String(r).padStart(w)));if(res!=null){if(rows&&rows.length)l.push('─'.repeat(w));l.push(String(res).padStart(w));}return `<pre class="vert">${l.join('\n')}</pre>`;}
+const II={
+addv(){const a=R(12000,69999),b=R(1200,29999),A=String(a),B=String(b).padStart(5,'0'),st=[];let c=0;
+  for(let i=4;i>=0;i--){const da=+A[i],db=+B[i],s=da+db+c,d=s%10,cin=c;c=s>=10?1:0;
+    st.push({p:`עמודת ה${NM[4-i]}: ${da} + ${db}${cin?' + '+cin+' (שזכרנו)':''} = ? מה כותבים מתחת לקו?`,a:d,h:`חברו: ${da} + ${db}${cin?' + '+cin:''}. אם יוצא 10 או יותר – כותבים רק את האחדות וזוכרים 1.`,e:`${da} + ${db}${cin?' + '+cin:''} = ${s}. כותבים ${d}${s>=10?' וזוכרים 1':''}.`});}
+  return {t:'חברו במאונך – שלב אחר שלב:',st,show:(i,ans)=>vR(a,'+',b,null,ans.slice().reverse().join('')+(i<5?'?':''),8),sum:`${nf(a)} + ${nf(b)} = ${nf(a+b)}`};},
+subv(){const a=R(30000,98999),b=R(1000,a-10000),A=String(a),B=String(b).padStart(5,'0'),st=[];let br=0;
+  for(let i=4;i>=0;i--){let top=+A[i]-br;const db=+B[i];let nb=0;if(top<db){top+=10;nb=1;}
+    st.push({p:`עמודת ה${NM[4-i]}: ${+A[i]}${br?' − 1 (פרקנו)':''}${nb?' → '+top+' (פורקים עשרת)':''} − ${db} = ? מה כותבים?`,a:top-db,
+      h:nb?`${+A[i]-br} קטן מ־${db}, אז פורקים עשרת מהעמודה הבאה: ${+A[i]-br}+10 = ${top}, ואז ${top} − ${db}.`:`חסרו: ${top} − ${db}.`,
+      e:`${top} − ${db} = ${top-db}${nb?' (ומהעמודה הבאה לוקחים 1)':''}.`});br=nb;}
+  return {t:'חסרו במאונך – שלב אחר שלב:',st,show:(i,ans)=>vR(a,'−',b,null,ans.slice().reverse().join('')+(i<5?'?':''),8),sum:`${nf(a)} − ${nf(b)} = ${nf(a-b)}`};},
+mul2(){const a=R(12,98),b=R(12,98),u=b%10,t=b-u,p1=a*u,p2=a*t,st=[
+  {p:`${a} × ${u} = ?`,a:p1,h:`פצלו את ${a} ל־${a-a%10} ו־${a%10}. כפלו כל חלק ב־${u}, ואז חברו את שתי התוצאות.`,e:`${a-a%10} × ${u} = ${(a-a%10)*u}; ${a%10} × ${u} = ${a%10*u}; ${(a-a%10)*u} + ${a%10*u} = ${p1}.`},
+  {p:`${a} × ${t} = ? (כפלו ב־${t/10} והוסיפו אפס)`,a:p2,h:`קודם חשבו ${a} × ${t/10} (פצלו ל־${a-a%10} ו־${a%10} וכפלו כל חלק), ואז הוסיפו אפס בסוף.`,e:`${a-a%10} × ${t/10} = ${(a-a%10)*t/10}; ${a%10} × ${t/10} = ${a%10*t/10}; יחד ${a*t/10}. מוסיפים אפס: ${p2}.`},
+  {p:`${p1} + ${p2} = ?`,a:a*b,h:`חברו מהאחדות לעשרות: ${p1} + ${p2}. אפשר לחבר קודם את העשרות ואז את האחדות.`,e:`${p1} + ${p2} = ${a*b}.`}];
+  return {t:`חשבו ${LT(a+' × '+b)} – בשלבים:`,st,show:(i,ans)=>vR(a,'×',b,ans.slice(0,2).concat(i<2?['?']:[]).slice(0,2),i>=2?(ans[2]!=null?ans[2]:'?'):null,6),sum:`${a} × ${b} = ${a*b}`};},
+mul3(){const a=R(101,999),b=R(2,9),h=Math.floor(a/100)*100,te=Math.floor(a%100/10)*10,u=a%10,st=[
+  {p:`${u} × ${b} = ? (אחדות)`,a:u*b,h:`כפלו את האחדות ${u} ב־${b}.`,e:`${u} × ${b} = ${u*b}.`},
+  {p:`${te} × ${b} = ? (עשרות)`,a:te*b,h:`${te/10} × ${b} = ${te*b/10}, ואחריו אפס.`,e:`${te} × ${b} = ${te*b}.`},
+  {p:`${h} × ${b} = ? (מאות)`,a:h*b,h:`${h/100} × ${b} = ${h*b/100}, ואחריו שני אפסים.`,e:`${h} × ${b} = ${h*b}.`},
+  {p:`${u*b} + ${te*b} + ${h*b} = ?`,a:a*b,h:'חברו את שלושת החלקים.',e:`סכום: ${a*b}.`}];
+  return {t:`חשבו ${LT(a+' × '+b)} – מפצלים למאות, עשרות ואחדות:`,st,show:(i,ans)=>vR(a,'×',b,ans.slice(0,3),i>=3?'?':null,6),sum:`${a} × ${b} = ${a*b}`};},
+div(){const d=R(3,9),q=R(101,999),rem=Math.random()<.4?R(1,d-1):0,N=q*d+rem,S=String(N),st=[];let k=0,cur=+S[0];
+  while(cur<d){k++;cur=cur*10+ +S[k];}
+  let qd='';
+  for(;;){const dg=Math.floor(cur/d),r=cur-dg*d;
+    st.push({p:`כמה פעמים ${d} נכנס ב־${cur}? (ספרה אחת)`,a:dg,h:`חפשו את הכפולה של ${d} הכי קרובה ל־${cur} מלמטה.`,e:`${d} × ${dg} = ${d*dg}, וזה הכי קרוב ל־${cur} בלי לעבור.`,dg});
+    st.push({p:`שארית: ${cur} − ${d*dg} = ?`,a:r,h:`חסרו את המכפלה מ־${cur}.`,e:`${cur} − ${d*dg} = ${r}.`,rem:r});
+    k++;if(k>=S.length)break;cur=r*10+ +S[k];}
+  return {t:`חלקו ${LT(nf(N)+' ÷ '+d)} – חילוק ארוך בשלבים:`,st,
+    show:(i,ans)=>{const ds=st.filter((s,j)=>j%2===0&&j<ans.length).map(s=>s.dg).join('');return `<pre class="vert">${S} ÷ ${d} = ${ds}${i%2===0&&i<st.length?'?':''}</pre>`;},
+    sum:`${nf(N)} ÷ ${d} = ${q}${rem?' ושארית '+rem:''}`};}
+};
+// ---- more on-screen calculation topics ----
+const mk=(t,vis,st,sum)=>({t,st,sum,show:(i,ans)=>`<div class="q" style="margin:4px 0">${vis}</div>`+ans.map((a,j)=>`<div class="sub" style="font-size:16px">✔ ${st[j].p.replace(/\?.*$/,'').trim()} ${a}</div>`).join('')});
+const one=(k,pre,unitP)=>()=>{const q=G[k]();const raw=q.o[q.a];const x=+String(raw).replace(/,/g,'').match(/-?\d+/)[0];
+  const unit=/סמ״ר/.test(raw)?' (בסמ״ר)':/ס״מ/.test(raw)?' (בס״מ)':'';
+  return mk(pre||'חשבו על המסך:',q.t+(q.v||''),[{p:`התשובה${unit} = ?`,a:x,h:q.h,e:q.e}],q.e);};
+II.unknown=one('unknown','');
+II.order=one('order','');
+II.perimeter=one('perimeter','');
+II.area=one('area','');
+II.estimate=()=>{
+  if(Math.random()<.5){const a=R(21,89),b=R(21,89),ra=Math.round(a/10)*10,rb=Math.round(b/10)*10;
+    return mk('אמדו על המסך (עגלו לעשרות):',LT(a+' × '+b),[
+      {p:`${a} מעוגל לעשרות = ?`,a:ra,h:'ספרת האחדות 5 ומעלה – מעגלים למעלה; 4 ומטה – למטה.',e:`${a} קרוב ל־${ra}.`},
+      {p:`${b} מעוגל לעשרות = ?`,a:rb,h:'ספרת האחדות 5 ומעלה – מעגלים למעלה; 4 ומטה – למטה.',e:`${b} קרוב ל־${rb}.`},
+      {p:`${ra} × ${rb} = ?`,a:ra*rb,h:`כפלו ${ra/10} × ${rb/10} והוסיפו שני אפסים.`,e:`${ra/10} × ${rb/10} = ${ra*rb/100}, ועם שני אפסים: ${ra*rb}.`}],`${a}×${b} ≈ ${ra}×${rb} = ${ra*rb}`);}
+  const a=R(101,999),b=R(2,9),ra=Math.round(a/100)*100;
+  return mk('אמדו על המסך (עגלו למאות):',LT(a+' × '+b),[
+    {p:`${a} מעוגל למאות = ?`,a:ra,h:'מסתכלים על ספרת העשרות: 5 ומעלה – למעלה; 4 ומטה – למטה.',e:`${a} קרוב ל־${ra}.`},
+    {p:`${ra} × ${b} = ?`,a:ra*b,h:`כפלו ${ra/100} × ${b} והוסיפו שני אפסים.`,e:`${ra/100} × ${b} = ${ra*b/100}, ועם שני אפסים: ${ra*b}.`}],`${a}×${b} ≈ ${ra}×${b} = ${ra*b}`);};
+II.fracOfQty=()=>{const den=R(2,10),num=R(1,den-1),u=R(2,12),tot=den*u,s=num*u;
+  return mk('שבר מכמות – על המסך:',`${fr(num,den)} מ־${tot}`,[
+    {p:`${tot} ÷ ${den} = ? (חלק אחד)`,a:u,h:`מחלקים את ${tot} ל־${den} חלקים שווים.`,e:`${tot} ÷ ${den} = ${u}.`},
+    {p:`${u} × ${num} = ? (לוקחים ${num} חלקים)`,a:s,h:`כפלו את החלק האחד במונה ${num}.`,e:`${u} × ${num} = ${s}.`}],`${fr(num,den)} מ־${tot} = ${s}`);};
+II.fracRest=()=>{const den=pick([3,4,5,6,8,10]),num=R(1,den-1),u=R(2,12),tot=den*u,s=num*u,r=tot-s;
+  return mk('מה שנשאר – על המסך:',`יש ${tot} פריטים. ${fr(num,den)} מהם נלקחו. כמה נשארו?`,[
+    {p:`${tot} ÷ ${den} = ? (חלק אחד)`,a:u,h:`מחלקים את ${tot} ל־${den} חלקים שווים.`,e:`${tot} ÷ ${den} = ${u}.`},
+    {p:`${u} × ${num} = ? (כמה נלקחו)`,a:s,h:`כפלו את החלק האחד ב־${num}.`,e:`${u} × ${num} = ${s}.`},
+    {p:`${tot} − ${s} = ? (כמה נשארו)`,a:r,h:'מחסירים מהכמות כולה את מה שנלקח.',e:`${tot} − ${s} = ${r}.`}],`נשארו ${r}`);};
+II.fracAddSub=()=>{const n=R(4,12),add=Math.random()<.5;let a,b;
+  if(add){a=R(1,n-1);b=R(1,n-1);}else{b=R(1,n-2);a=R(b+1,n-1);}const r=add?a+b:a-b;
+  return mk('חשבו על המסך:',`${fr(a,n)} ${add?'+':'−'} ${fr(b,n)}`,[
+    {p:`מונה התשובה: ${a} ${add?'+':'−'} ${b} = ?`,a:r,h:`במכנים זהים ${add?'מחברים':'מחסרים'} רק את המונים.`,e:`${a} ${add?'+':'−'} ${b} = ${r}.`},
+    {p:`מכנה התשובה = ?`,a:n,h:'המכנה לא משתנה כשהמכנים זהים.',e:`המכנה נשאר ${n}.`}],`תוצאה: ${fr(r,n)}`);};
+II.mixedToImp=()=>{const n=R(2,9),w=R(1,6),k=R(1,n-1),s=w*n+k;
+  return mk('הפכו לשבר פשוט – על המסך:',mixed(w,k,n),[
+    {p:`${w} × ${n} = ?`,a:w*n,h:'כופלים את השלם במכנה.',e:`${w} × ${n} = ${w*n}.`},
+    {p:`${w*n} + ${k} = ? (מונה)`,a:s,h:'מוסיפים את המונה המקורי.',e:`${w*n} + ${k} = ${s}.`},
+    {p:`מכנה = ?`,a:n,h:'המכנה נשאר כמו שהיה.',e:`המכנה נשאר ${n}.`}],`${mixed(w,k,n)} = ${fr(s,n)}`);};
+II.impToMixed=()=>{const n=R(2,9),w=R(1,6),k=R(1,n-1),s=w*n+k;
+  return mk('הפכו למספר מעורב – על המסך:',fr(s,n),[
+    {p:`${s} ÷ ${n} = ? (השלם)`,a:w,h:`כמה פעמים ${n} נכנס ב־${s}?`,e:`${n} × ${w} = ${n*w}, לכן השלם ${w}.`},
+    {p:`שארית: ${s} − ${n*w} = ? (מונה)`,a:k,h:`חסרו מ־${s} את ${n*w}.`,e:`${s} − ${n*w} = ${k}.`},
+    {p:`מכנה = ?`,a:n,h:'המכנה נשאר כמו שהיה.',e:`המכנה נשאר ${n}.`}],`${fr(s,n)} = ${mixed(w,k,n)}`);};
+function colsAdd(a,b){const L=String(a+b).length,A=String(a).padStart(L,'0'),B=String(b).padStart(L,'0'),st=[];let c=0;
+  for(let i=L-1;i>=0;i--){const da=+A[i],db=+B[i],s=da+db+c,cin=c;c=s>=10?1:0;
+    st.push({p:`עמודת ה${NM[L-1-i]}: ${da} + ${db}${cin?' + '+cin+' (שזכרנו)':''} = ? מה כותבים?`,a:s%10,h:`חברו: ${da} + ${db}${cin?' + '+cin:''}. אם יוצא 10 או יותר – כותבים רק את האחדות וזוכרים 1.`,e:`${da} + ${db}${cin?' + '+cin:''} = ${s}. כותבים ${s%10}${s>=10?' וזוכרים 1':''}.`});}
+  return {st,L};}
+function colsSub(a,b){const x=a-b,L=String(x).length,A=String(a).padStart(L,'0'),B=String(b).padStart(L,'0'),st=[];let br=0;
+  for(let i=L-1;i>=0;i--){let top=+A[i]-br;const db=+B[i];let nb=0;if(top<db){top+=10;nb=1;}
+    st.push({p:`עמודת ה${NM[L-1-i]}: ${+A[i]}${br?' − 1 (פרקנו)':''}${nb?' → '+top+' (פורקים עשרת)':''} − ${db} = ? מה כותבים?`,a:top-db,
+      h:nb?`${+A[i]-br} קטן מ־${db}, אז פורקים עשרת מהעמודה הבאה: ${+A[i]-br}+10 = ${top}, ואז ${top} − ${db}.`:`חסרו: ${top} − ${db}.`,e:`${top} − ${db} = ${top-db}${nb?' (ומהעמודה הבאה לוקחים 1)':''}.`});br=nb;}
+  return {st,L};}
+II.unknown=()=>{const ty=R(0,3),a=R(1200,6900),b=R(1200,6900);let eq,x,top,bot,op,cc;
+  if(ty===0){cc=a+b;x=a;eq=`□ + ${nf(b)} = ${nf(cc)}`;top=cc;bot=b;op='−';}
+  else if(ty===1){const A=a+b+R(100,900);cc=A-b;x=b;eq=`${nf(A)} − □ = ${nf(cc)}`;top=A;bot=cc;op='−';}
+  else if(ty===2){cc=a;x=a+b;eq=`□ − ${nf(b)} = ${nf(cc)}`;top=cc;bot=b;op='+';}
+  else{cc=a+b;x=b;eq=`${nf(a)} + □ = ${nf(cc)}`;top=cc;bot=a;op='−';}
+  const cols=op==='+'?colsAdd(top,bot):colsSub(top,bot),w=String(Math.max(top,bot,x)).length+2;
+  const why=op==='+'?`כדי למצוא את □ מחברים: ${nf(top)} + ${nf(bot)}`:`כדי למצוא את □ מחסרים: ${nf(top)} − ${nf(bot)}`;
+  return {t:'מצאו את המספר החסר:',st:cols.st,sum:`${why} = ${nf(x)}`,
+    show:(i,ans)=>`<div class="q" style="margin:2px 0">${LT(eq)}</div><div class="sub">${why}</div>`+vR(top,op,bot,null,ans.slice().reverse().join('')+(i<cols.st.length?'?':''),w)};};
+// state
+let ST=null,padBuf='';
+function startInter(k){
+  const g=II[k]();ST={k,g,i:0,ans:[],mist:0,smist:0,done:false};cur={k};
+  $('qn').textContent=`${qi+1}/${rq.length}`;$('rbar').style.width=(qi/rq.length*100)+'%';$('pctSm').textContent=pctNow()+'%';
+  $('qt').innerHTML=g.t;$('opts').innerHTML='';['hint','expl','next'].forEach(x=>$(x).classList.add('hide'));
+  $('pad').classList.remove('hide');say(`${SK[k][2]} ${SK[k][0]} – מחשבים על המסך!`);renderInter();
+}
+function renderInter(){const s=ST.g.st[ST.i];padBuf='';$('padv').textContent='';
+  $('qv').innerHTML=ST.g.show(ST.i,ST.ans)+(s?`<div class="q">${s.p.replace(/\d[\d\s+−×÷=?,]*(?:\d|\?)|\d/g,m=>LT(m.trim()))}</div>`:'');}
+function padKey(c){if(!ST||ST.done)return;
+  if(c==='⌫'){padBuf=padBuf.slice(0,-1);}
+  else if(c==='✓'){return padCheck();}
+  else if(padBuf.length<7)padBuf+=c;
+  $('padv').textContent=padBuf;
+  const s=ST.g.st[ST.i];if(s&&c!=='⌫'&&String(s.a).length===1&&padBuf.length===1)padCheck();}
+function padCheck(){if(padBuf==='')return;const s=ST.g.st[ST.i];
+  if(+padBuf===s.a){ST.ans.push(s.a);snd1();ST.smist=0;$('hint').classList.add('hide');ST.i++;
+    if(ST.i>=ST.g.st.length)return endInter();renderInter();say(pick(['נכון, ממשיכים!','יפה!','מצוין ✔️']),'hop');}
+  else{ST.mist++;ST.smist++;snd.bad();
+    if(ST.smist===1){say('לא בדיוק – הנה רמז 💡','shake');$('hint').innerHTML='💡 רמז: '+s.h;$('hint').classList.remove('hide');padBuf='';$('padv').textContent='';}
+    else{say('הנה התשובה – ממשיכים 📘','shake');$('expl').innerHTML='📘 '+s.e;$('expl').classList.remove('hide');ST.ans.push(s.a);ST.smist=0;$('hint').classList.add('hide');ST.i++;
+      if(ST.i>=ST.g.st.length)return endInter();renderInter();}}}
+function snd1(){tone(660,0,.12);tone(880,.08,.15);}
+function endInter(){ST.done=true;const pts=ST.mist===0?1:ST.mist<=2?.5:0;
+  profile.m[ST.k]=Math.min(MAXG,(profile.m[ST.k]||0)+pts);roundPts+=pts;if(pts>0)roundOk++;save();
+  $('qv').innerHTML=ST.g.show(ST.g.st.length,ST.ans);$('pad').classList.add('hide');
+  $('hint').classList.add('hide');
+  $('expl').innerHTML='✅ '+ST.g.sum;$('expl').classList.remove('hide');
+  if(ST.mist===0){streak++;snd.ok();say(pick(OKM)+' ללא טעויות!','hop');if(streak%4===0)setTimeout(()=>{snd.bonus();toast('🎁 בונוס! '+streak+' ברצף!');},350);}
+  else{streak=0;snd.ok();say('סיימתם! בפעם הבאה יהיה עוד יותר קל 💪','hop');}
+  $('pctSm').textContent=pctNow()+'%';$('next').classList.remove('hide');}
+// pad ui
+(function(){const keys=['1','2','3','4','5','6','7','8','9','⌫','0','✓'];
+  $('pad').querySelector('.pad').innerHTML=keys.map(k=>`<button class="pk${k==='✓'?' go':''}" data-k="${k}">${k}</button>`).join('');
+  $('pad').querySelectorAll('.pk').forEach(b=>b.onclick=()=>padKey(b.dataset.k));
+  document.addEventListener('keydown',e=>{if($('pad').classList.contains('hide'))return;
+    if(/^[0-9]$/.test(e.key))padKey(e.key);else if(e.key==='Backspace')padKey('⌫');else if(e.key==='Enter'){e.stopPropagation();padKey('✓');}},true);
+  // draft canvas
+  const cv=$('cv'),x=cv.getContext('2d');let dr=false;x.lineWidth=3;x.lineCap='round';x.strokeStyle='#1f2a44';
+  const pos=e=>{const r=cv.getBoundingClientRect();return [(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height];};
+  cv.onpointerdown=e=>{dr=true;const p=pos(e);x.beginPath();x.moveTo(p[0],p[1]);cv.setPointerCapture(e.pointerId);};
+  cv.onpointermove=e=>{if(!dr)return;const p=pos(e);x.lineTo(p[0],p[1]);x.stroke();};
+  cv.onpointerup=cv.onpointercancel=()=>{dr=false;};
+  $('dBtn').onclick=()=>$('draft').classList.toggle('hide');
+  $('dClr').onclick=()=>x.clearRect(0,0,cv.width,cv.height);
+})();
+$('hBtn').onclick=()=>{
+  if(ST&&!ST.done){const s=ST.g.st[ST.i];ST.mist++;ST.smist++;
+    if(ST.smist===1){say('הנה עזרה 💡','hop');$('hint').innerHTML='💡 רמז: '+s.h;$('hint').classList.remove('hide');}
+    else{say('הנה הפתרון – ממשיכים 📘');$('expl').innerHTML='📘 '+s.e;$('expl').classList.remove('hide');ST.ans.push(s.a);ST.smist=0;$('hint').classList.add('hide');ST.i++;
+      if(ST.i>=ST.g.st.length)return endInter();renderInter();}
+    return;}
+  if(!cur||locked||!$('sGame')||ST)return;
+  if(mist===0){mist=1;streak=0;say('הנה עזרה 💡');$('hint').innerHTML='💡 רמז: '+cur.h;$('hint').classList.remove('hide');}
+  else{mist=2;locked=true;streak=0;$('opts').children[cur.a].classList.add('ok');say('הנה הפתרון – נלמד ונמשיך 📘');
+    $('expl').innerHTML='📘 הסבר: '+cur.e;$('expl').classList.remove('hide');$('next').classList.remove('hide');}
+};
+$('skip').onclick=()=>{$('pad').classList.add('hide');$('hint').classList.add('hide');
+  const answered=ST?ST.done:locked;
+  if(answered){advance();return;}
+  streak=0;if(ST)ST.done=true;rq.splice(qi,1);
+  if(!rq.length){renderStart();show('sStart');return;}
+  nextQ();};
+renderStart();
+</script>
+</body></html>
