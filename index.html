@@ -20,7 +20,18 @@ button,input{font:inherit}button{border:0;border-radius:12px;padding:11px 14px;m
 @keyframes jump{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-19px) rotate(-7deg)}70%{transform:translateY(-5px) rotate(7deg)}}@keyframes nod{0%,100%{transform:rotate(0)}40%{transform:rotate(-7deg)}70%{transform:rotate(5deg)}}@keyframes dance{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-12deg) scale(1.05)}75%{transform:rotate(12deg) scale(1.05)}}
 .spark{position:fixed;pointer-events:none;font-size:24px;z-index:20;animation:burst 1.1s ease-out forwards}@keyframes burst{0%{opacity:0;transform:translateY(10px) scale(.4)}20%{opacity:1}100%{opacity:0;transform:translateY(-100px) rotate(35deg) scale(1.5)}}
 .track{height:13px;background:#e9e4f7;border-radius:20px;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,#51c9a0,#7864df);transition:width .3s}
-#bonusBox{background:#f8f5ff;border-radius:16px;padding:15px;margin-top:18px}#bonusBox h3{margin:0 0 8px}.hide{display:none!important}.statline{margin:12px 0}.statline b{float:left}.end{text-align:center}#endScreen{display:none}#weakWords{line-height:1.9}.wheel{width:90px;height:90px;border-radius:50%;background:conic-gradient(#ffc857 0 60deg,#a99af4 60deg 120deg,#73d7b2 120deg 180deg,#ff9cb1 180deg 240deg,#8ed8f5 240deg 300deg,#ffc857 300deg);display:grid;place-items:center;margin:10px auto;font-size:28px;border:4px solid white;box-shadow:0 3px 12px #3332;animation:spin 1.1s ease-out}@keyframes spin{to{transform:rotate(720deg)}}
+#bonusBox{background:#f8f5ff;border-radius:16px;padding:15px;margin-top:18px}#bonusBox h3{margin:0 0 8px}.hide{display:none!important}.statline{margin:12px 0}.statline b{float:left}.end{text-align:center}#endScreen{display:none}#weakWords{line-height:1.9}.modal{position:fixed;inset:0;background:#201744b8;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(5px)}
+.modal.hide{display:none!important}.modalCard{width:min(620px,100%);max-height:92vh;overflow:auto;background:white;border-radius:28px;padding:22px;text-align:center;box-shadow:0 24px 80px #0005;animation:pop .35s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{from{opacity:0;transform:scale(.7) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.wheel{width:132px;height:132px;border-radius:50%;background:conic-gradient(#ffc857 0 60deg,#a99af4 60deg 120deg,#73d7b2 120deg 180deg,#ff9cb1 180deg 240deg,#8ed8f5 240deg 300deg,#ffc857 300deg);display:grid;place-items:center;margin:10px auto;font-size:42px;border:7px solid white;box-shadow:0 5px 20px #3333;position:relative}
+.wheel:after{content:"▼";position:absolute;top:-15px;color:#4a368c;font-size:22px}
+.wheel.spin{animation:spinWheel 1.4s cubic-bezier(.15,.75,.18,1) forwards}
+@keyframes spinWheel{to{transform:rotate(1080deg)}}
+#letterTiles{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin:16px 0}
+.letterTile{min-width:48px;min-height:52px;background:#eee9ff;color:#493a9c;font-size:25px;border:2px solid #d8cff8;box-shadow:0 4px 0 #d8cff8}
+.letterTile.used{opacity:.35;transform:scale(.92)}
+.blanks{font-size:clamp(30px,8vw,46px);font-weight:900;letter-spacing:7px;direction:ltr;margin:22px auto;color:#342765}
+.modalTeacher{font-size:18px;font-weight:bold;line-height:1.5;background:#f8f5ff;border-radius:15px;padding:12px;margin:12px 0}
 @media(max-width:720px){.layout{grid-template-columns:1fr}.teacherArea{min-height:125px}.teacher{width:90px;height:115px}.card{padding:14px}}@media(max-width:450px){#answers,#bonusAnswers{grid-template-columns:1fr}.speech{font-size:14px}}
 </style>
 </head>
@@ -106,6 +117,22 @@ button,input{font:inherit}button{border:0;border-radius:12px;padding:11px 14px;m
 </div>
 </main>
 
+<div id="bonusModal" class="modal hide" role="dialog" aria-modal="true" aria-labelledby="bonusTitle">
+ <div class="modalCard">
+  <div style="font-size:13px;color:#76699f;font-weight:bold">BONUS ROUND · סיבוב בונוס</div>
+  <h2 id="bonusTitle">🎡 גלגל המזל של המורה לאנגלית!</h2>
+  <p id="bonusIntro">המורה מסובבת את הגלגל כדי לחשוף את אתגר האותיות.</p>
+  <div id="popupWheel" class="wheel">🎡</div>
+  <h3 id="bonusHebrew" style="font-size:clamp(22px,5vw,30px);margin:12px 0">המילה בעברית</h3>
+  <p id="bonusInstruction">איזו מילה באנגלית מתאימה? השלימו את האותיות החסרות.</p>
+  <div id="bonusBlanks" class="blanks">_ _ _ _</div>
+  <div id="letterTiles"></div>
+  <div id="bonusMessage" class="modalTeacher" aria-live="polite">בהצלחה! You can do it!</div>
+  <button id="spinAgainBtn" class="secondary hide">🔄 המורה מנסה שוב!</button>
+  <button id="closeBonusBtn" class="primary hide">ממשיכים לשאלה הבאה ←</button>
+ </div>
+</div>
+
 <script>
 const words=[
 ["student","תלמיד / תלמידה"],["guitar","גיטרה"],["piano","פסנתר"],["bathroom","שירותים / חדר אמבטיה"],
@@ -141,7 +168,79 @@ function giveHint(){let ans=currentReverse?current[0]:current[1];$("hintText").t
 function revealWord(){if(mistakes<4)return;$("hintText").textContent="📚 "+(currentReverse?current[1]+" = "+current[0]:current[0]+" = "+current[1]);$("revealBtn").classList.add("hide");showNextButton()}
 function showNextButton(){ $("nextBtn").onclick=nextQuestion;$("nextBtn").textContent=idx===deck.length-1?"לתוצאות 🏆":"לשאלה הבאה ←";$("nextBtn").classList.remove("hide")}
 function nextQuestion(){if(!locked)return;idx++;if(idx>=deck.length){finishRound();return}showQuestion()}
-function startBonus(){challengeDone=false;bonusWord=shuffle(words.filter(w=>w!==current))[0];$("bonusBox").classList.remove("hide");$("bonusAnswers").innerHTML="";$("bonusMessage").textContent="";$("bonusTitle").textContent="🎡 גלגל המזל — אותיות חסרות!";$("wheelArea").classList.remove("hide");$("bonusPrompt").textContent="מסובבים את הגלגל ומגלים איזו מילה צריך להשלים…";$("nextBtn").classList.add("hide");setTimeout(()=>{if(challengeDone)return;const w=bonusWord[0],chars=[...w];let positions=chars.map((c,i)=>/[a-z]/i.test(c)?i:-1).filter(i=>i>=0);let hidden=shuffle(positions).slice(0,Math.min(2,Math.max(1,Math.floor(positions.length/3))));let display=chars.map((c,i)=>hidden.includes(i)?"_":c).join(" ");$("bonusPrompt").textContent="השלימו את האותיות החסרות: "+display;$("wheelArea").classList.add("hide");let correct=w;let distractors=shuffle(words.filter(x=>x!==bonusWord).map(x=>x[0])).slice(0,2);shuffle([correct,...distractors]).forEach(a=>{let b=document.createElement("button");b.className="secondary";b.textContent=a;b.onclick=()=>{if(challengeDone)return;challengeDone=true;$("bonusAnswers").querySelectorAll("button").forEach(x=>x.disabled=true);if(a===correct){score+=10;$("score").textContent=score;$("bonusMessage").textContent="🎉 מעולה! פיצחת את המילה! +10 נקודות";celebrate(true);$("teacher").className="teacher dance";$("teacherSpeech").innerHTML="Superstar!<small>גלגל המזל מאחוריך! 🌟</small>";}else{$("bonusMessage").textContent="כמעט! המילה הייתה "+correct+". ממשיכים באומץ 💜";$("teacher").className="teacher sad";}profile.known=Array.from(new Set([...profile.known,bonusWord[0]]));save();$("nextBtn").onclick=nextQuestion;$("nextBtn").textContent=idx===deck.length-1?"לתוצאות 🏆":"לשאלה הבאה ←";$("nextBtn").classList.remove("hide")};$("bonusAnswers").appendChild(b)})},1100)}
+function startBonus(){
+ challengeDone=false;
+ bonusWord=shuffle(words.filter(w=>w!==current))[0];
+ $("bonusModal").classList.remove("hide");
+ $("bonusHebrew").textContent=bonusWord[1];
+ $("bonusIntro").textContent="מיסטר/מיס? לא! המורה לאנגלית מסובבת את הגלגל 🎡";
+ $("bonusMessage").textContent="הגלגל מסתובב… Spin, spin, spin!";
+ $("bonusMessage").style.background="#f8f5ff";
+ $("bonusBlanks").textContent="";
+ $("letterTiles").innerHTML="";
+ $("closeBonusBtn").classList.add("hide");
+ $("spinAgainBtn").classList.add("hide");
+ const wheel=$("popupWheel");wheel.classList.remove("spin");void wheel.offsetWidth;wheel.classList.add("spin");
+ setTimeout(()=>{
+   const chars=[...bonusWord[0]];
+   const positions=chars.map((c,i)=>/[a-z]/i.test(c)?i:-1).filter(i=>i>=0);
+   const count=Math.min(2,Math.max(1,Math.floor(positions.length/4)));
+   const hidden=shuffle(positions).slice(0,count);
+   $("bonusBlanks").textContent=chars.map((c,i)=>hidden.includes(i)?"_":c).join(" ");
+   $("bonusIntro").textContent="The word means | המילה בעברית:";
+   $("bonusInstruction").textContent="בחרו את האותיות החסרות לפי הסדר. Tap the missing letters in order!";
+   $("bonusMessage").textContent="בחרו את האותיות החסרות למילה באנגלית. You can do it!";
+   let available=hidden.map(i=>chars[i]);
+   // Add distractor letters, then shuffle tiles. Each click fills the next blank.
+   const alphabet="abcdefghijklmnopqrstuvwxyz";
+   while(available.length<Math.max(5,hidden.length+3)){
+     const ch=alphabet[Math.floor(Math.random()*alphabet.length)];
+     if(!available.includes(ch))available.push(ch);
+   }
+   available=shuffle(available);
+   let chosen=[];
+   available.forEach(letter=>{
+     const b=document.createElement("button");
+     b.className="letterTile";b.textContent=letter;
+     b.onclick=()=>{
+       if(chosen.length>=hidden.length||b.classList.contains("used")||challengeDone)return;
+       chosen.push({letter,b});b.classList.add("used");
+       const display=chars.map((c,i)=>{const at=hidden.indexOf(i);return at>=0?(chosen[at]?.letter||"_"):c}).join(" ");
+       $("bonusBlanks").textContent=display;
+       if(chosen.length===hidden.length){
+         const answer=chosen.map(x=>x.letter).join("");
+         const target=hidden.map(i=>chars[i]).join("");
+         if(answer===target){
+           challengeDone=true;score+=10;$("score").textContent=score;
+           $("bonusMessage").textContent="🎉 נכון! The teacher spins the letters! +10 נקודות";
+           $("bonusMessage").style.background="#d9f8e8";
+           $("bonusBlanks").animate([{transform:"rotate(0deg) scale(1)"},{transform:"rotate(360deg) scale(1.18)"},{transform:"rotate(720deg) scale(1)"}],{duration:900,easing:"ease-out"});
+           $("teacher").className="teacher dance";$("teacherSpeech").innerHTML="Fantastic!<small>המורה לאנגלית רוקדת משמחה! 🎉</small>";celebrate(true);
+           profile.known=Array.from(new Set([...profile.known,bonusWord[0]]));save();
+           $("closeBonusBtn").classList.remove("hide");$("spinAgainBtn").classList.add("hide");
+         }else{
+           $("bonusMessage").textContent="אופס! לא בדיוק — המורה מנסה לסובב שוב! Try again!";
+           $("bonusMessage").style.background="#ffe4e9";
+           $("spinAgainBtn").classList.remove("hide");
+           $("popupWheel").classList.remove("spin");
+         }
+       }
+     };
+     $("letterTiles").appendChild(b);
+   });
+ },1450);
+ $("spinAgainBtn").onclick=()=>{
+   $("spinAgainBtn").classList.add("hide");$("bonusMessage").textContent="המורה מנסה שוב… Spin again!";
+   const wheel=$("popupWheel");wheel.classList.remove("spin");void wheel.offsetWidth;wheel.classList.add("spin");
+   // Clear selected letters and reset tile availability; retain the same word.
+   setTimeout(()=>{
+     chosen=[];$("bonusBlanks").textContent=chars.map((c,i)=>hidden.includes(i)?"_":c).join(" ");
+     $("letterTiles").querySelectorAll("button").forEach(b=>b.classList.remove("used"));
+     $("bonusMessage").textContent="נסו שוב! You can do it!";
+   },1100);
+ };
+ $("closeBonusBtn").onclick=()=>{$("bonusModal").classList.add("hide");$("nextBtn").onclick=nextQuestion;$("nextBtn").textContent=idx===deck.length-1?"לתוצאות 🏆":"לשאלה הבאה ←";$("nextBtn").classList.remove("hide");};
+}
 function celebrate(big){const emojis=big?["🎉","⭐","✨","🏆","💜","🎊"]:["⭐","✨","🎉"];for(let i=0;i<(big?18:8);i++){let s=document.createElement("span");s.className="spark";s.textContent=emojis[Math.floor(Math.random()*emojis.length)];s.style.left=(8+Math.random()*84)+"vw";s.style.top=(20+Math.random()*60)+"vh";document.body.appendChild(s);setTimeout(()=>s.remove(),1200)}try{const A=window.AudioContext||window.webkitAudioContext;if(A){let ctx=new A(),o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";o.frequency.value=big?880:660;g.gain.value=.06;o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.14);o.onended=()=>ctx.close()}}catch(e){}}
 function finishRound(){$("word").style.display="none";$("answers").style.display="none";$("message").style.display="none";$("bonusBox").classList.add("hide");$("nextBtn").classList.add("hide");$("endScreen").style.display="block";profile.rounds++;profile.best=Math.max(profile.best,score);$("finalText").textContent=`${profile.nickname}, צברת ${score} נקודות בסיבוב!`; $("endEncouragement").textContent=score>=100?"Amazing! Your English teacher does a victory dance! המורה לאנגלית רוקדת משמחה! 🏆":"כל הכבוד על האימון! עוד סיבוב יחזק את הזיכרון 💪";$("teacher").className="teacher dance";$("teacherSpeech").innerHTML="You did it!<small>Your English teacher is proud of you! המורה לאנגלית גאה בך! 💜</small>";save()}
 function showWeakWords(){let miss=words.filter(w=>profile.wrong.includes(w[0]));$("weakWords").innerHTML="<b>מילים שכדאי לתרגל:</b><br>"+(miss.length?miss.map(w=>w[0]+" — "+w[1]).join("<br>"):"עדיין אין מילים מאתגרות שנשמרו. שחקו סיבוב נוסף!")}
