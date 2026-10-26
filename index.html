@@ -60,6 +60,7 @@ button,input{font:inherit}button{border:0;border-radius:12px;padding:11px 14px;m
 
 <section class="card" id="game">
 <div class="row"><span class="pill">⭐ ניקוד: <b id="score">0</b></span><span class="pill">🔥 רצף: <b id="streak">0</b></span><span class="pill" id="progress">שאלה 1/10</span></div>
+<div style="text-align:center;margin-top:8px"><button id="soundToggle" class="secondary" type="button">🔊 אפקטים קוליים: פעילים</button></div>
 <div class="teacherArea">
 <svg id="teacher" class="teacher" viewBox="0 0 120 150" role="img" aria-label="המורה מיס ברנר">
 <path class="hair" d="M26 50 Q18 10 58 9 Q99 7 94 53 L88 90 L31 91Z"/>
@@ -157,13 +158,85 @@ let deck=[],idx=0,score=0,streak=0,mistakes=0,locked=true,challengeDone=true,reg
 function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
 function loadProfile(){try{const x=JSON.parse(localStorage.getItem(STORE)||"null");if(x)profile={...profile,...x}}catch(e){}$("nickname").value=profile.nickname||"";updateStats()}
 function save(){try{localStorage.setItem(STORE,JSON.stringify(profile))}catch(e){}updateStats()}
+let effectsEnabled=true,audioCtx=null;
+function playReaction(kind){
+ if(!effectsEnabled)return;
+ try{
+  const Ctx=window.AudioContext||window.webkitAudioContext;
+  if(!Ctx)return;
+  audioCtx=audioCtx||new Ctx();
+  if(audioCtx.state==="suspended")audioCtx.resume();
+  const notes=kind==="clap"?[660,880,740,990,880]:kind==="wow"?[520,390,310]:kind==="win"?[660,830,990,1320]:[430,360];
+  notes.forEach((freq,i)=>{
+   const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+   osc.type=kind==="wrong"?"triangle":"sine";
+   osc.frequency.setValueAtTime(freq,audioCtx.currentTime+i*.105);
+   gain.gain.setValueAtTime(.0001,audioCtx.currentTime+i*.105);
+   gain.gain.exponentialRampToValueAtTime(kind==="wrong"?.045:.07,audioCtx.currentTime+i*.105+.02);
+   gain.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+i*.105+.12);
+   osc.connect(gain);gain.connect(audioCtx.destination);
+   osc.start(audioCtx.currentTime+i*.105);osc.stop(audioCtx.currentTime+i*.105+.14);
+  });
+  // Quick clap-like burst for correct answers.
+  if(kind==="clap"||kind==="win"){
+   for(let i=0;i<(kind==="win"?7:4);i++){
+    const buffer=audioCtx.createBuffer(1,audioCtx.sampleRate*.035,audioCtx.sampleRate),data=buffer.getChannelData(0);
+    for(let j=0;j<data.length;j++)data[j]=(Math.random()*2-1)*(1-j/data.length);
+    const source=audioCtx.createBufferSource(),filter=audioCtx.createBiquadFilter(),g=audioCtx.createGain();
+    source.buffer=buffer;filter.type="highpass";filter.frequency.value=1200;g.gain.value=.16;
+    source.connect(filter);filter.connect(g);g.connect(audioCtx.destination);source.start(audioCtx.currentTime+i*.085);
+   }
+  }
+ }catch(e){}
+}
 function speak(text){if(!("speechSynthesis"in window)){say("אפשר לנסות בדפדפן Chrome כדי לשמוע את המילה.");return}speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(text);u.lang="en-US";u.rate=.78;speechSynthesis.speak(u)}
+function speakReactionText(text){
+ if(!effectsEnabled||!("speechSynthesis" in window))return;
+ speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-US";u.rate=1.05;u.pitch=1.25;speechSynthesis.speak(u);
+}
 function speakSentence(sentence){
  if(!("speechSynthesis" in window)){say("הדפדפן הזה לא תומך בהקראה. נסו לפתוח ב־Chrome או Safari.");return}
  speechSynthesis.cancel();
  const utterance=new SpeechSynthesisUtterance(sentence);
  utterance.lang="en-US";utterance.rate=.82;utterance.pitch=1;
  speechSynthesis.speak(utterance);
+}
+let gameAudioContext=null;
+function playReaction(kind){
+ try{
+  const AudioCtx=window.AudioContext||window.webkitAudioContext;
+  if(!AudioCtx)return;
+  if(!gameAudioContext)gameAudioContext=new AudioCtx();
+  if(gameAudioContext.state==="suspended")gameAudioContext.resume();
+  const ctx=gameAudioContext;
+  const now=ctx.currentTime;
+  const tone=(freq,start,duration,volume=.08,type="sine")=>{
+   const osc=ctx.createOscillator(),gain=ctx.createGain();
+   osc.type=type;osc.frequency.setValueAtTime(freq,now+start);
+   gain.gain.setValueAtTime(.0001,now+start);
+   gain.gain.exponentialRampToValueAtTime(volume,now+start+.025);
+   gain.gain.exponentialRampToValueAtTime(.0001,now+start+duration);
+   osc.connect(gain);gain.connect(ctx.destination);
+   osc.start(now+start);osc.stop(now+start+duration+.03);
+  };
+  if(kind==="good"){
+   // Cheerful fanfare plus several short clap-like noise bursts.
+   [523,659,784,1047].forEach((f,i)=>tone(f,i*.085,.24,.055,"triangle"));
+   for(let i=0;i<9;i++){
+    const start=.04+i*.075;
+    const buffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*.055),ctx.sampleRate);
+    const data=buffer.getChannelData(0);
+    for(let j=0;j<data.length;j++)data[j]=(Math.random()*2-1)*(1-j/data.length);
+    const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();
+    src.buffer=buffer;filter.type="highpass";filter.frequency.value=1100;
+    gain.gain.setValueAtTime(.0001,now+start);gain.gain.exponentialRampToValueAtTime(.13,now+start+.008);gain.gain.exponentialRampToValueAtTime(.0001,now+start+.055);
+    src.connect(filter);filter.connect(gain);gain.connect(ctx.destination);src.start(now+start);
+   }
+  }else{
+   // A gentle, playful "aww" descending sound, not harsh or shaming.
+   tone(440,0,.25,.06,"sine");tone(370,.18,.3,.055,"sine");tone(294,.4,.42,.05,"sine");
+  }
+ }catch(e){}
 }
 function start(){profile.nickname=$("nickname").value.trim().slice(0,24)||profile.nickname||"כוכב/ת";$("nickname").value=profile.nickname;save();deck=shuffle(words).slice(0,10);idx=0;score=0;streak=0;regularAnswered=0;roundCorrect=0;$("score").textContent=0;$("streak").textContent=0;$("endScreen").style.display="none";$("word").style.display="block";$("answers").style.display="grid";$("message").style.display="block";$("nextBtn").classList.add("hide");$("teacherSpeech").innerHTML="Let's do this! יוצאים לדרך!<small>המורה לאנגלית מעודדת אותך ⭐</small>";showQuestion()}
 function showQuestion(){locked=false;challengeDone=true;mistakes=0;current=deck[idx];currentReverse=Math.random()<.5;$("progress").textContent=`Question ${idx+1}/10 | שאלה ${idx+1}/10`;$("questionLabel").textContent=currentReverse?"Choose the English word | בחרו את המילה באנגלית":"Choose the Hebrew translation | בחרו את התרגום לעברית";$("word").textContent=currentReverse?current[1]:current[0];$("hintText").textContent="";$("message").textContent="";$("message").className="";$("bonusBox").classList.add("hide");$("hintBtn").classList.add("hide");$("speakBtn").classList.add("hide");$("revealBtn").classList.add("hide");$("nextBtn").classList.add("hide");$("teacher").className="teacher";$("teacherMouth").setAttribute("d","M49 56 Q60 66 72 56");
@@ -181,7 +254,7 @@ function choose(btn,answer){
   if(mistakes===0)profile.firstTry++;
   streak++;$("score").textContent=score;$("streak").textContent=streak;
   say(streak>=3?"Amazing! נכון מאוד! 🎉":"Fantastic! כל הכבוד! ⭐","good");
-  celebrate(streak>=3);$("teacher").className="teacher "+(streak>=3?"celebrate":"jump");
+  playReaction("good");celebrate(streak>=3);playReaction(streak>=3?"win":"clap");$("teacher").className="teacher "+(streak>=3?"celebrate":"jump");
   $("teacherSpeech").innerHTML=(streak>=3?"You're on fire! את/ה אלוף/ה! 🔥":"Amazing! ידעתי שתצליח/י! 🎉")+"<small>Your English teacher is proud of you! המורה לאנגלית גאה בך!</small>";
   if(streak===3||streak===5||streak===10){score+=5;profile.medals++;$("score").textContent=score;say("🏅 רצף "+streak+"! בונוס 5 נקודות!","good");}
   $("hintBtn").classList.add("hide");$("speakBtn").classList.add("hide");$("revealBtn").classList.add("hide");
@@ -189,7 +262,7 @@ function choose(btn,answer){
   if(regularAnswered%3===0&&idx<deck.length-1){$("nextBtn").textContent="מוכנים לאתגר הבונוס? 🎡";$("nextBtn").classList.remove("hide");$("nextBtn").onclick=startBonus;}else showNextButton();
   return;
  }
- mistakes++;profile.wrong=Array.from(new Set([...profile.wrong,current[0]]));streak=0;$("streak").textContent=0;
+ mistakes++;playReaction("wrong");if(mistakes===1&&effectsEnabled)speakReactionText("Oops! Try again!");profile.wrong=Array.from(new Set([...profile.wrong,current[0]]));streak=0;$("streak").textContent=0;
  btn.classList.add("wrong");
  // Important: keep every answer available after a mistake, so the child can try again.
  document.querySelectorAll("#answers button").forEach(b=>{b.disabled=false;b.classList.remove("wrong","correct")});
@@ -317,12 +390,12 @@ function startBonus(){
            $("bonusMessage").textContent="🎉 נכון! The teacher spins the letters! +10 נקודות";
            $("bonusMessage").style.background="#d9f8e8";
            $("bonusBlanks").animate([{transform:"rotate(0deg) scale(1)"},{transform:"rotate(360deg) scale(1.18)"},{transform:"rotate(720deg) scale(1)"}],{duration:900,easing:"ease-out"});
-           $("teacher").className="teacher celebrate";$("teacherSpeech").innerHTML="Fantastic!<small>המורה לאנגלית רוקדת משמחה! 🎉</small>";celebrate(true);
+           playReaction("good");$("teacher").className="teacher celebrate";$("teacherSpeech").innerHTML="Fantastic!<small>המורה לאנגלית רוקדת משמחה! 🎉</small>";celebrate(true);
            profile.known=Array.from(new Set([...profile.known,bonusWord[0]]));save();
            $("closeBonusBtn").classList.remove("hide");$("spinAgainBtn").classList.add("hide");
          }else{
            $("bonusMessage").textContent="אופס! לא בדיוק — המורה מנסה לסובב שוב! Try again!";
-           $("bonusMessage").style.background="#ffe4e9";
+           $("bonusMessage").style.background="#ffe4e9";playReaction("wrong");if(effectsEnabled)speakReactionText("Oops! Try again!");
            $("spinAgainBtn").classList.remove("hide");
            $("popupWheel").classList.remove("spin");
          }
@@ -347,7 +420,7 @@ function celebrate(big){const emojis=big?["🎉","⭐","✨","🏆","💜","🎊
 function finishRound(){$("word").style.display="none";$("answers").style.display="none";$("message").style.display="none";$("bonusBox").classList.add("hide");$("nextBtn").classList.add("hide");$("endScreen").style.display="block";profile.rounds++;profile.best=Math.max(profile.best,score);$("finalText").textContent=`${profile.nickname}, צברת ${score} נקודות בסיבוב!`; $("endEncouragement").textContent=score>=100?"Amazing! Your English teacher does a victory dance! המורה לאנגלית רוקדת משמחה! 🏆":"כל הכבוד על האימון! עוד סיבוב יחזק את הזיכרון 💪";$("teacher").className="teacher dance";$("teacherSpeech").innerHTML="You did it!<small>Your English teacher is proud of you! המורה לאנגלית גאה בך! 💜</small>";save()}
 function showWeakWords(){let miss=words.filter(w=>profile.wrong.includes(w[0]));$("weakWords").innerHTML="<b>מילים שכדאי לתרגל:</b><br>"+(miss.length?miss.map(w=>w[0]+" — "+w[1]).join("<br>"):"עדיין אין מילים מאתגרות שנשמרו. שחקו סיבוב נוסף!")}
 function updateStats(){let cov=profile.known.length/words.length,acc=profile.attempts?profile.firstTry/profile.attempts:0,rounds=Math.min(profile.rounds/5,1),r=Math.round(Math.min(1,cov*.65+acc*.25+rounds*.1)*100);$("readiness").textContent=r+"%";$("readinessBar").style.width=r+"%";$("readinessText").textContent=r>=85?"Your English teacher says: Amazing! המורה לאנגלית אומרת: מדהים! 🎉":r>=55?"מתקדמים יפה — ממשיכים! 💪":"כל שאלה מקרבת אותך למבחן 🌱";$("rounds").textContent=profile.rounds;$("best").textContent=profile.best;$("known").textContent=profile.known.length+"/51";$("medals").textContent=profile.medals}
-$("startBtn").onclick=start;$("againBtn").onclick=()=>{ $("word").style.display="block";$("answers").style.display="grid";$("message").style.display="block";start()};$("speakBtn").onclick=()=>speak(current[0]);$("hintBtn").onclick=()=>{if(mistakes>=2)$("hintText").innerHTML="💡 Example sentence | משפט לדוגמה: "+exampleFor(current[0])+' <button type="button" class="secondary" id="speakSentenceBtn">🔊 Listen to the sentence | השמעת המשפט</button>';
+$("soundToggle").onclick=()=>{effectsEnabled=!effectsEnabled;$("soundToggle").textContent=effectsEnabled?"🔊 אפקטים קוליים: פעילים":"🔇 אפקטים קוליים: כבויים";if(!effectsEnabled&&"speechSynthesis"in window)speechSynthesis.cancel();};$("startBtn").onclick=start;$("againBtn").onclick=()=>{ $("word").style.display="block";$("answers").style.display="grid";$("message").style.display="block";start()};$("speakBtn").onclick=()=>speak(current[0]);$("hintBtn").onclick=()=>{if(mistakes>=2)$("hintText").innerHTML="💡 Example sentence | משפט לדוגמה: "+exampleFor(current[0])+' <button type="button" class="secondary" id="speakSentenceBtn">🔊 Listen to the sentence | השמעת המשפט</button>';
   setTimeout(()=>{const sentenceBtn=$("speakSentenceBtn");if(sentenceBtn)sentenceBtn.onclick=()=>speakSentence(exampleFor(current[0]).split(" — ")[0]);},0);};$("revealBtn").onclick=revealWord;$("weakBtn").onclick=showWeakWords;$("nickname").addEventListener("keydown",e=>{if(e.key==="Enter")start()});
 loadProfile();
 </script>
